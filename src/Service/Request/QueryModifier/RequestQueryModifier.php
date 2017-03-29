@@ -8,6 +8,7 @@
 
 namespace Eukles\Service\Request\QueryModifier;
 
+use Eukles\Service\QueryModifier\RequestQueryModifierInterface;
 use Eukles\Service\Request\QueryModifier\Modifier\FilterModifier;
 use Eukles\Service\Request\QueryModifier\Modifier\SortModifier;
 use Propel\Runtime\ActiveQuery\ModelCriteria;

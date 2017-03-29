@@ -11,7 +11,7 @@
 
 namespace Eukles\Service\Request\QueryModifier\Modifier;
 
-use Ged\Service\Request\QueryModifier\Modifier\ModifierException;
+use Eukles\Service\QueryModifier\Modifier\Exception\ModifierException;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Psr\Http\Message\ServerRequestInterface;

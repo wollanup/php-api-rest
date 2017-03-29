@@ -1,5 +1,5 @@
 <?php
-namespace Eukles\Propel\Runtime\ActiveRecord;
+namespace Eukles\Entity;
 
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\ActiveRecord\ActiveRecordInterface;
@@ -13,7 +13,7 @@ use Psr\Container\ContainerInterface;
  *
  * @package Core\Model
  */
-abstract class ActiveRecordRequestAbstract implements ActiveRecordRequestInterface
+abstract class EntityRequestAbstract implements EntityRequestInterface
 {
     
     /**
@@ -85,7 +85,7 @@ abstract class ActiveRecordRequestAbstract implements ActiveRecordRequestInterfa
         $packageArray = explode('.', $package);
         array_pop($packageArray);
         $parentNs = implode('\\', $packageArray);
-        
+    
         return sprintf('%s\\Action\\%sAction', $parentNs, $tableMap->getPhpName());
     }
     
@@ -106,7 +106,7 @@ abstract class ActiveRecordRequestAbstract implements ActiveRecordRequestInterfa
         } else {
             return [];
         }
-        
+    
         $data = [];
         if (false === empty($properties)) {
             foreach ($properties as $property) {
@@ -116,7 +116,7 @@ abstract class ActiveRecordRequestAbstract implements ActiveRecordRequestInterfa
                 }
             }
         }
-        
+    
         return $data;
     }
     
@@ -144,7 +144,7 @@ abstract class ActiveRecordRequestAbstract implements ActiveRecordRequestInterfa
         if (!array_key_exists($name, $this->getRelations())) {
             throw new RelationNotFoundException(sprintf('Calling getRelation() on an unknown relation: %s.', $name));
         }
-        
+    
         return $this->relations[$name];
     }
     
@@ -170,7 +170,7 @@ abstract class ActiveRecordRequestAbstract implements ActiveRecordRequestInterfa
             $this->buildRelations($tableMap);
             $this->relationsBuilt = true;
         }
-        
+    
         return $this->relations;
     }
     
@@ -236,7 +236,7 @@ abstract class ActiveRecordRequestAbstract implements ActiveRecordRequestInterfa
     public function setPrimaryKey($pk)
     {
         $this->pk = $pk;
-        
+    
         return $this;
     }
     
@@ -247,7 +247,7 @@ abstract class ActiveRecordRequestAbstract implements ActiveRecordRequestInterfa
     {
         # init to array to don't pass tests on null
         $this->relations = [];
-        
+    
         foreach ($tableMap->getRelations() as $relation) {
             if ($relation->getType() === RelationMap::ONE_TO_MANY) {
                 $this->relations[$relation->getPluralName()] = $relation;
