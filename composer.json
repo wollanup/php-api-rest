@@ -1,0 +1,30 @@
+{
+  "name": "wollanup/php-api-rest-propel",
+  "license": "MIT",
+  "description": "Propel part of Eukles API",
+  "type": "library",
+  "authors": [
+    {
+      "name": "Steve Mareigner",
+      "email": "steve.mareigner@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Eukles\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Eukles\\": "tests/"
+    }
+  },
+  "require": {
+    "psr/container": "1.*",
+    "psr/http-message": "1.*",
+    "propel/propel": "~2.0@dev"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "5.4.*"
+  }
+}
