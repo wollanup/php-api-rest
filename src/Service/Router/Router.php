@@ -8,8 +8,7 @@
 
 namespace Eukles\Service\Router;
 
-use Eukles\Service\Route\RouteInterface;
-use Eukles\Service\RouteMap\RouteMapInterface;
+use Eukles\RouteMap\RouteMapInterface;
 use Eukles\Service\RoutesClasses\RoutesClassesInterface;
 use FastRoute\RouteParser;
 use Psr\Container\ContainerInterface;
