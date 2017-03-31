@@ -10,6 +10,7 @@ namespace Eukles\Service\Router;
 
 use Eukles\Container\ContainerInterface;
 use Eukles\RouteMap\RouteMapInterface;
+use Eukles\Service\Router\Exception\RouteEmptyValueException;
 use Zend\Permissions\Acl\Role\GenericRole;
 use Zend\Permissions\Acl\Role\RoleInterface;
 
@@ -98,7 +99,7 @@ class Route extends \Slim\Route implements RouteInterface
                 $this->add(function ($request, $response, $next) use ($route) {
                     $requestClass = $route->getRequestClass();
                     /** @var ContainerInterface $this */
-                    $response = $this->getActiveRecordRequestFactory()->create(
+                    $response = $this->getEntityFactory()->create(
                         new $requestClass($this),
                         $request,
                         $response,
@@ -112,8 +113,8 @@ class Route extends \Slim\Route implements RouteInterface
                 # OTHERS : fetch
                 $this->add(function ($request, $response, $next) use ($route) {
                     $requestClass = $route->getRequestClass();
-                    /** @var EuklesContainerInterface $this */
-                    $response = $this->getActiveRecordRequestFactory()->fetch(
+                    /** @var ContainerInterface $this */
+                    $response = $this->getEntityFactory()->fetch(
                         new $requestClass($this),
                         $request,
                         $response,
