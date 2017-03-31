@@ -6,11 +6,10 @@
  * Time: 17:15
  */
 
-namespace Eukles\Service\RouteMap;
+namespace Eukles\RouteMap;
 
 use Eukles\Action\ActionInterface;
 use Eukles\Entity\EntityRequestInterface;
-use Eukles\RouteMap\RouteMapInterface;
 use Eukles\Service\Router\Route;
 use Eukles\Service\Router\RouteInterface;
 use Eukles\Service\Router\RouterInterface;
