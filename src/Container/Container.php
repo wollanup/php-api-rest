@@ -10,7 +10,9 @@ namespace Eukles\Container;
 
 use Eukles\Entity\EntityFactory;
 use Eukles\Entity\EntityFactoryInterface;
+use Eukles\Service\Pagination\RequestPaginationInterface;
 use Eukles\Service\QueryModifier\RequestQueryModifierInterface;
+use Eukles\Service\Request\Pagination\RequestPagination;
 use Eukles\Service\Request\QueryModifier\RequestQueryModifier;
 use Eukles\Service\ResponseBuilder\ResponseBuilderInterface;
 use Eukles\Service\ResponseFormatter\ResponseFormatterInterface;
@@ -31,7 +33,7 @@ use Slim\Http\Request;
  */
 class Container extends SlimContainer implements ContainerInterface
 {
-    
+
     /**
      * Container constructor.
      *
@@ -42,14 +44,14 @@ class Container extends SlimContainer implements ContainerInterface
     public function __construct(array $values = [])
     {
         parent::__construct($values);
-        
+
         # Default Found Handler
         if (!isset($values[self::HANDLER])) {
             $this[self::HANDLER] = function (ContainerInterface $c) {
                 return new ActionStrategy($c);
             };
         }
-        
+
         # Default Request Query Modifier (Do nothing),
         # Use your own implementation of RequestQueryModifierInterface
         if (!isset($values[self::ENTITY_FACTORY])) {
@@ -57,7 +59,15 @@ class Container extends SlimContainer implements ContainerInterface
                 return new EntityFactory($c);
             };
         }
-        
+    
+        # Default Request Query Modifier,
+        # You can use your own implementation of RequestQueryModifierInterface
+        if (!isset($values[self::REQUEST_PAGINATION])) {
+            $this[self::REQUEST_PAGINATION] = function (ContainerInterface $c) {
+                return new RequestPagination($c->getRequest());
+            };
+        }
+    
         # Default Request Query Modifier (Do nothing),
         # Use your own implementation of RequestQueryModifierInterface
         if (!isset($values[self::REQUEST_QUERY_MODIFIER])) {
@@ -65,7 +75,7 @@ class Container extends SlimContainer implements ContainerInterface
                 return new RequestQueryModifier($c->getRequest());
             };
         }
-        
+
         # Default Response Builder (Do nothing),
         # Use your own implementation of RequestQueryModifierInterface
         if (!isset($values[self::RESPONSE_BUILDER])) {
@@ -75,7 +85,7 @@ class Container extends SlimContainer implements ContainerInterface
                 };
             };
         }
-        
+    
         # Default Response Formatter (Do nothing),
         # Use your own implementation of RequestQueryModifierInterface
         if (!isset($values[self::RESPONSE_FORMATTER])) {
@@ -85,7 +95,7 @@ class Container extends SlimContainer implements ContainerInterface
                         $response->getBody()
                             ->write(is_array($result) ? json_encode($result) : $result);
                     }
-                    
+    
                     return $response;
                 };
             };
@@ -106,6 +116,14 @@ class Container extends SlimContainer implements ContainerInterface
     public function getRequest()
     {
         return $this['request'];
+    }
+    
+    /**
+     * @return RequestPaginationInterface
+     */
+    public function getRequestPagination()
+    {
+        return $this[self::REQUEST_PAGINATION];
     }
     
     /**

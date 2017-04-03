@@ -4,7 +4,7 @@ namespace Eukles\Slim\Handlers\Strategies;
 use Eukles\Action;
 use Eukles\Container\ContainerInterface;
 use Eukles\Service\Pagination\PaginationInterface;
-use Eukles\Service\QueryModifier\RequestQueryModifierInterface;
+use Eukles\Service\QueryModifier\QueryModifierInterface;
 use Eukles\Service\ResponseBuilder\ResponseBuilderException;
 use Eukles\Service\ResponseFormatter\ResponseFormatterException;
 use Psr\Http\Message\ResponseInterface;
@@ -102,10 +102,10 @@ class ActionStrategy implements InvocationStrategyInterface
             if (null !== $class) {
                 if (($p = $request->getAttribute($name)) !== null) {
                     $buildParams[] = $p;
-                } elseif ($class->implementsInterface(RequestQueryModifierInterface::class)) {
-                    $buildParams[] = $p;
+                } elseif ($class->implementsInterface(QueryModifierInterface::class)) {
+                    $buildParams[] = $this->container->getRequestQueryModifier();
                 } elseif ($class->implementsInterface(PaginationInterface::class)) {
-                    $buildParams[] = $p;
+                    $buildParams[] = $this->container->getRequestPagination();
                 } elseif ($class->implementsInterface(UploadedFileInterface::class)) {
                     $files = $request->getUploadedFiles();
                     $files = array_values($files);
