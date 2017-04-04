@@ -12,7 +12,7 @@ use Propel\Runtime\ActiveQuery\ModelCriteria;
 
 class QueryModifier implements QueryModifierInterface
 {
-
+    
     /**
      * @var ModelCriteria
      */
@@ -30,7 +30,7 @@ class QueryModifier implements QueryModifierInterface
         if ($this->query) {
             $query->mergeWith($this->query);
         }
-    
+        
         return $query;
     }
     
