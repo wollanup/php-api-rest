@@ -11,8 +11,9 @@ namespace Eukles\Action;
 use Eukles\Mock\Container;
 use Eukles\Mock\Request;
 use Eukles\Mock\Response;
+use PHPUnit\Framework\TestCase;
 
-class ActionTest extends \PHPUnit_Framework_TestCase
+class ActionTest extends TestCase
 {
     
     public function testConstruct()
