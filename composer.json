@@ -23,7 +23,8 @@
     "propel/propel": "~2.0@dev",
     "wollanup/php-api-rest-interfaces": "dev-master",
     "wollanup/php-api-rest-utils": "dev-master",
-    "wollanup/php-api-rest-propel-behavior": "dev-master"
+    "wollanup/php-api-rest-propel-behavior": "dev-master",
+    "wollanup/php-api-rest-service-request": "dev-master"
   },
   "require-dev": {
     "phpunit/phpunit": "^6.0"
