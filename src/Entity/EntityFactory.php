@@ -96,14 +96,18 @@ class EntityFactory implements EntityFactoryInterface
         # Now get the primary key in its final form
         $pk = $entityRequest->getPrimaryKey();
         if (empty($pk)) {
-            throw new \InvalidArgumentException('Primary key not set in beforeFetch() and not found in URI path');
+            $handler = $entityRequest->getContainer()->getEntityRequestErrorHandler();
+    
+            return $handler->primaryKeyNotFound($entityRequest, $request, $response);
         }
     
         # Then, fetch object
         $obj = $query->findPk($pk);
     
         if ($obj === null) {
-            throw new EntityNotFoundException("Cannot fetch model from DB");
+            $handler = $entityRequest->getContainer()->getEntityRequestErrorHandler();
+    
+            return $handler->entityNotFound($entityRequest, $request, $response);
         }
     
         # Get request params

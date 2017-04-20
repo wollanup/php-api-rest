@@ -7,6 +7,7 @@ use Eukles\Service\Pagination\PaginationInterface;
 use Eukles\Service\QueryModifier\QueryModifierInterface;
 use Eukles\Service\ResponseBuilder\ResponseBuilderException;
 use Eukles\Service\ResponseFormatter\ResponseFormatterException;
+use Eukles\Slim\Handlers\ApiProblemRendererTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
@@ -21,8 +22,17 @@ use Slim\Interfaces\InvocationStrategyInterface;
 class ActionStrategy implements InvocationStrategyInterface
 {
     
+    use ApiProblemRendererTrait;
+    /**
+     * @var ContainerInterface
+     */
     protected $container;
     
+    /**
+     * ActionStrategy constructor.
+     *
+     * @param ContainerInterface $container
+     */
     public function __construct(ContainerInterface $container)
     {
         $this->container = $container;
@@ -56,13 +66,26 @@ class ActionStrategy implements InvocationStrategyInterface
      *
      * @param callable               $callable
      * @param ServerRequestInterface $request
+     * @param ResponseInterface      $response
      * @param array                  $routeArguments
      *
      * @return mixed
      */
-    public function callAction(callable $callable, ServerRequestInterface $request, array $routeArguments)
+    public function callAction(
+        callable $callable,
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $routeArguments
+    )
     {
-        return call_user_func_array($callable, $this->buildParams($callable, $request, $routeArguments));
+    
+        try {
+            return call_user_func_array($callable, $this->buildParams($callable, $request, $routeArguments));
+        } catch (\Exception $e) {
+            $handler = $this->container->getActionErrorHandler();
+        
+            return $handler($e, $request, $response);
+        }
     }
     
     /**
@@ -195,7 +218,7 @@ class ActionStrategy implements InvocationStrategyInterface
             }
             
             # Call Action method
-            $result   = $this->callAction($callable, $request, $routeArguments);
+            $result   = $this->callAction($callable, $request, $response, $routeArguments);
             $response = $callable[0]->getResponse();
         }
         if (($result instanceof ResponseInterface)) {

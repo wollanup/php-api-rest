@@ -21,12 +21,11 @@
   },
   "require": {
     "propel/propel": "~2.0@dev",
-    "wollanup/php-api-rest-interfaces": "^1.0",
+    "wollanup/php-api-rest-interfaces": "^1.0.4",
     "wollanup/php-api-rest-propel-behavior": "^1.0",
     "wollanup/php-api-rest-service-request": "^1.0",
     "crell/api-problem": "^2.0",
-    "akrabat/rka-content-type-renderer": "^0.7.3",
-    "symfony/translation": "3.2.*"
+    "akrabat/rka-content-type-renderer": "^0.7.3"
   },
   "require-dev": {
     "phpunit/phpunit": "^6.0"
