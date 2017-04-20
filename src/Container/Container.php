@@ -19,7 +19,9 @@ use Eukles\Service\ResponseFormatter\ResponseFormatterInterface;
 use Eukles\Service\Router\RouterInterface;
 use Eukles\Service\RoutesClasses\Exception\RoutesClassesServiceMissingException;
 use Eukles\Service\RoutesClasses\RoutesClassesInterface;
+use Eukles\Slim\Handlers\ActionError;
 use Eukles\Slim\Handlers\ActionErrorInterface;
+use Eukles\Slim\Handlers\EntityRequestError;
 use Eukles\Slim\Handlers\EntityRequestErrorInterface;
 use Eukles\Slim\Handlers\Strategies\ActionStrategy;
 use Psr\Http\Message\ResponseInterface;
@@ -100,6 +102,20 @@ class Container extends SlimContainer implements ContainerInterface
     
                     return $response;
                 };
+            };
+        }
+    
+        # Default error handler, you can use your own implementation
+        if (!isset($values[self::ENTITY_REQUEST_ERROR_HANDLER])) {
+            $this[self::ENTITY_REQUEST_ERROR_HANDLER] = function () {
+                return new EntityRequestError();
+            };
+        }
+    
+        # Default error handler, you can use your own implementation
+        if (!isset($values[self::ACTION_ERROR_HANDLER])) {
+            $this[self::ACTION_ERROR_HANDLER] = function () {
+                return new ActionError();
             };
         }
     }
