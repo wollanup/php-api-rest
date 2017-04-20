@@ -1,12 +1,12 @@
 <?php
 namespace Eukles\Entity;
 
+use Eukles\Container\ContainerInterface;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\ActiveRecord\ActiveRecordInterface;
 use Propel\Runtime\Map\Exception\RelationNotFoundException;
 use Propel\Runtime\Map\RelationMap;
 use Propel\Runtime\Map\TableMap;
-use Psr\Container\ContainerInterface;
 
 /**
  * ActiveRecordRequestInterface Base class
@@ -85,7 +85,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
         $packageArray = explode('.', $package);
         array_pop($packageArray);
         $parentNs = implode('\\', $packageArray);
-    
+        
         return sprintf('%s\\Action\\%sAction', $parentNs, $tableMap->getPhpName());
     }
     
@@ -106,7 +106,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
         } else {
             return [];
         }
-    
+        
         $data = [];
         if (false === empty($properties)) {
             foreach ($properties as $property) {
@@ -116,7 +116,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
                 }
             }
         }
-    
+        
         return $data;
     }
     
@@ -144,7 +144,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
         if (!array_key_exists($name, $this->getRelations())) {
             throw new RelationNotFoundException(sprintf('Calling getRelation() on an unknown relation: %s.', $name));
         }
-    
+        
         return $this->relations[$name];
     }
     
@@ -170,7 +170,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
             $this->buildRelations($tableMap);
             $this->relationsBuilt = true;
         }
-    
+        
         return $this->relations;
     }
     
@@ -236,7 +236,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     public function setPrimaryKey($pk)
     {
         $this->pk = $pk;
-    
+        
         return $this;
     }
     
@@ -247,7 +247,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     {
         # init to array to don't pass tests on null
         $this->relations = [];
-    
+        
         foreach ($tableMap->getRelations() as $relation) {
             if ($relation->getType() === RelationMap::ONE_TO_MANY) {
                 $this->relations[$relation->getPluralName()] = $relation;
