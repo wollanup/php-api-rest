@@ -158,8 +158,6 @@ class EntityFactory implements EntityFactoryInterface
         if (is_array($request->getParsedBody())) {
             $finder = new PksFinder();
             $pks    = $finder->find($request->getParsedBody());
-            
-            $entityRequest->setPrimaryKey($request->getAttribute('routeInfo')[2]['id']);
         }
         
         # Next, we create the query (ModelCriteria), based on Action class (which can alter the query)
