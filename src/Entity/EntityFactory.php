@@ -9,6 +9,7 @@
 namespace Eukles\Entity;
 
 use Eukles\Action\ActionInterface;
+use Eukles\Util\PksFinder;
 use Propel\Runtime\Exception\EntityNotFoundException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -53,7 +54,7 @@ class EntityFactory implements EntityFactoryInterface
 
         # Finally, build name of parameter to inject in action method, will be used later
         if ($nameOfParameterToAdd === null) {
-            $nameOfParameterToAdd = $entityRequest->buildNameOfParameterToAdd();
+            $nameOfParameterToAdd = $entityRequest->getNameOfParameterToAdd();
         }
         /** @var $request ServerRequestInterface */
         $newRequest = $request->withAttribute($nameOfParameterToAdd, $obj);
@@ -81,8 +82,8 @@ class EntityFactory implements EntityFactoryInterface
         callable $next,
         $nameOfParameterToAdd = null
     ) {
-
-        # First, we try to determine PK in  request path (most common case)
+    
+        # First, we try to determine PK in request path (most common case)
         if (isset($request->getAttribute('routeInfo')[2]['id'])) {
             $entityRequest->setPrimaryKey($request->getAttribute('routeInfo')[2]['id']);
         }
@@ -125,13 +126,70 @@ class EntityFactory implements EntityFactoryInterface
 
         # Finally, build name of parameter to inject in action method, will be used later
         if ($nameOfParameterToAdd === null) {
-            $nameOfParameterToAdd = $entityRequest->buildNameOfParameterToAdd();
+            $nameOfParameterToAdd = $entityRequest->getNameOfParameterToAdd();
         }
         $newRequest = $request->withAttribute($nameOfParameterToAdd, $obj);
         $response   = $next($newRequest, $response);
     
         return $response;
     }
+    
+    /**
+     * Fetch an existing collection of activeRecords and add it to Request attributes
+     *
+     * @param EntityRequestInterface       $entityRequest
+     * @param ServerRequestInterface       $request
+     * @param ResponseInterface            $response
+     * @param callable                     $next
+     * @param                              $nameOfParameterToAdd
+     *
+     * @return ResponseInterface
+     */
+    public function fetchCollection(
+        EntityRequestInterface $entityRequest,
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        callable $next,
+        $nameOfParameterToAdd = null
+    ) {
+        
+        # First, we try to find PKs in body
+        $pks = [];
+        if (is_array($request->getParsedBody())) {
+            $finder = new PksFinder();
+            $pks    = $finder->find($request->getParsedBody());
+            
+            $entityRequest->setPrimaryKey($request->getAttribute('routeInfo')[2]['id']);
+        }
+        
+        # Next, we create the query (ModelCriteria), based on Action class (which can alter the query)
+        $query = $this->getQueryFromActiveRecordRequest($entityRequest);
+        
+        if (empty($pks)) {
+            $handler = $entityRequest->getContainer()->getEntityRequestErrorHandler();
+            
+            return $handler->primaryKeyNotFound($entityRequest, $request, $response);
+        }
+        
+        # Then, fetch object
+        $col = $query->findPks($pks);
+        
+        if ($col === null) {
+            $handler = $entityRequest->getContainer()->getEntityRequestErrorHandler();
+            
+            return $handler->entityNotFound($entityRequest, $request, $response);
+        }
+        
+        # Finally, build name of parameter to inject in action method, will be used later
+        if ($nameOfParameterToAdd === null) {
+            $nameOfParameterToAdd = $entityRequest->getNameOfParameterToAdd(true);
+        }
+        $newRequest = $request->withAttribute($nameOfParameterToAdd, $col);
+        $response   = $next($newRequest, $response);
+        
+        return $response;
+    }
+    
     
     /**
      * Create the query (ModelCriteria), based on Action class (which can alter the query)

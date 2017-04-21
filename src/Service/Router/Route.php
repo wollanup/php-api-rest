@@ -17,6 +17,7 @@ use Zend\Permissions\Acl\Role\RoleInterface;
 class Route extends \Slim\Route implements RouteInterface
 {
     
+    protected $collectionFromPks;
     /**
      * @var bool
      */
@@ -125,6 +126,21 @@ class Route extends \Slim\Route implements RouteInterface
                     return $response;
                 });
             }
+        } elseif ($this->isMakeCollection()) {
+            $route = $this;
+            $this->add(function ($request, $response, $next) use ($route) {
+                $requestClass = $route->getRequestClass();
+                /** @var ContainerInterface $this */
+                $response = $this->getEntityFactory()->fetchCollection(
+                    new $requestClass($this),
+                    $request,
+                    $response,
+                    $next,
+                    $route->getNameOfInjectedParam()
+                );
+        
+                return $response;
+            });
         }
         
         $router->addResourceRoute($this);
@@ -313,9 +329,30 @@ class Route extends \Slim\Route implements RouteInterface
     /**
      * @return boolean
      */
+    public function isMakeCollection()
+    {
+        return $this->collectionFromPks;
+    }
+    
+    /**
+     * @return boolean
+     */
     public function isMakeInstance()
     {
         return $this->instanceFromPk;
+    }
+    
+    /**
+     * @param bool $forceFetch
+     *
+     * @return RouteInterface
+     */
+    public function makeCollection($forceFetch = false)
+    {
+        $this->collectionFromPks  = true;
+        $this->instanceForceFetch = $forceFetch;
+        
+        return $this;
     }
     
     /**
