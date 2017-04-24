@@ -22,6 +22,7 @@ trait ApiProblemRendererTrait
      * @param string                 $title
      * @param int                    $status
      * @param string                 $detail
+     * @param string                 $type
      * @param string                 $instance
      *
      * @return ResponseInterface
@@ -32,11 +33,13 @@ trait ApiProblemRendererTrait
         $title = "Unknown Error",
         $status = 500,
         $detail = "",
+        $type = "about:blank",
         $instance = ""
     ) {
         $problem = new ApiProblem($title);
         $problem->setStatus($status);
         $problem->setDetail($detail);
+        $problem->setType($type);
         $problem->setInstance($instance);
         $renderer = new ApiProblemRenderer();
         

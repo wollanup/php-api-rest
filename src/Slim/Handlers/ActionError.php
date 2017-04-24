@@ -8,11 +8,11 @@
 
 namespace Eukles\Slim\Handlers;
 
-use Eukles\Entity\EntityRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Handlers\AbstractError;
 
-class ActionError implements ActionErrorInterface
+class ActionError extends AbstractError implements ActionErrorInterface
 {
     
     use ApiProblemRendererTrait;
@@ -29,35 +29,17 @@ class ActionError implements ActionErrorInterface
         ServerRequestInterface $request,
         ResponseInterface $response
     ) {
+    
+        $this->writeToErrorLog($exception);
+        
         return $this->render(
             $request,
             $response,
             "Failed to process action",
             $exception->getCode() ?: 500,
-            $exception->getMessage() ?: "Unknown error"
-        );
-    }
-    
-    /**
-     * @param EntityRequestInterface $entityRequest
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface      $response
-     *
-     * @return ResponseInterface
-     */
-    public function primaryKeyNotFound(
-        EntityRequestInterface $entityRequest,
-        ServerRequestInterface $request,
-        ResponseInterface $response
-    ) {
-        $model = $entityRequest->getTableMap()->getPhpName();
-        
-        return $this->render(
-            $request,
-            $response,
-            "Primary Key Not Found in request",
-            404,
-            "Primary key for {$model} not found in request"
+            $exception->getMessage() ?: "Unknown error",
+            $this->displayErrorDetails ? get_class($exception) : "about:blank",
+            $this->displayErrorDetails ? $exception->getTraceAsString() : ""
         );
     }
 }
