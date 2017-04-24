@@ -16,7 +16,7 @@ use Psr\Http\Message\ServerRequestInterface;
 
 class EntityFactory implements EntityFactoryInterface
 {
-
+    
     /**
      * Create a new instance of activeRecord and add it to Request attributes
      *
@@ -37,10 +37,10 @@ class EntityFactory implements EntityFactoryInterface
     ) {
         # make a new empty record
         $obj = $entityRequest->instantiateActiveRecord();
-
+    
         # Execute beforeCreate hook, which can alter record
         $entityRequest->beforeCreate($obj);
-
+    
         # Then, alter object with allowed properties
         /** @noinspection PhpUndefinedMethodInspection */
         $obj->fromArray(
@@ -48,10 +48,10 @@ class EntityFactory implements EntityFactoryInterface
                 $request->getParams(),
                 $request->getMethod()
             ));
-
+    
         # Execute afterCreate hook, which can alter record
         $entityRequest->afterCreate($obj);
-
+    
         # Finally, build name of parameter to inject in action method, will be used later
         if ($nameOfParameterToAdd === null) {
             $nameOfParameterToAdd = $entityRequest->getNameOfParameterToAdd();
@@ -59,10 +59,10 @@ class EntityFactory implements EntityFactoryInterface
         /** @var $request ServerRequestInterface */
         $newRequest = $request->withAttribute($nameOfParameterToAdd, $obj);
         $response   = $next($newRequest, $response);
-
+    
         return $response;
     }
-
+    
     /**
      * Fetch an existing instance of activeRecord and add it to Request attributes
      *
@@ -87,13 +87,13 @@ class EntityFactory implements EntityFactoryInterface
         if (isset($request->getAttribute('routeInfo')[2]['id'])) {
             $entityRequest->setPrimaryKey($request->getAttribute('routeInfo')[2]['id']);
         }
-
+    
         # Next, we create the query (ModelCriteria), based on Action class (which can alter the query)
         $query = $this->getQueryFromActiveRecordRequest($entityRequest);
-
+    
         # Execute beforeFetch hook, which can enforce primary key
         $query = $entityRequest->beforeFetch($query);
-
+    
         # Now get the primary key in its final form
         $pk = $entityRequest->getPrimaryKey();
         if (empty($pk)) {
@@ -120,10 +120,10 @@ class EntityFactory implements EntityFactoryInterface
     
         # Then, alter object with allowed properties
         $obj->fromArray($entityRequest->getAllowedDataFromRequest($params, $request->getMethod()));
-
+    
         # Then, execute afterFetch hook, which can alter the object
         $entityRequest->afterFetch($obj);
-
+    
         # Finally, build name of parameter to inject in action method, will be used later
         if ($nameOfParameterToAdd === null) {
             $nameOfParameterToAdd = $entityRequest->getNameOfParameterToAdd();
@@ -153,11 +153,19 @@ class EntityFactory implements EntityFactoryInterface
         $nameOfParameterToAdd = null
     ) {
         
-        # First, we try to find PKs in body
         $pks = [];
-        if (is_array($request->getParsedBody())) {
-            $finder = new PksFinder();
-            $pks    = $finder->find($request->getParsedBody());
+        if ($request->getMethod() === 'GET') {
+            # GET : Try to find PKs in query
+            $params = $request->getQueryParams();
+            if (array_key_exists('id', $params)) {
+                $pks = $params['id'];
+            }
+        } else {
+            # POST/PATCH : Try to find PKs in body
+            if (is_array($request->getParsedBody())) {
+                $finder = new PksFinder(['id']);
+                $pks    = $finder->find($request->getParsedBody());
+            }
         }
         
         # Next, we create the query (ModelCriteria), based on Action class (which can alter the query)
@@ -187,7 +195,6 @@ class EntityFactory implements EntityFactoryInterface
         
         return $response;
     }
-    
     
     /**
      * Create the query (ModelCriteria), based on Action class (which can alter the query)
