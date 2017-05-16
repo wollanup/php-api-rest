@@ -31,12 +31,17 @@ class ActionError extends AbstractError implements ActionErrorInterface
     ) {
     
         $this->writeToErrorLog($exception);
-        
+    
+        $status = $exception->getCode();
+        if (!is_integer($status) || $status < 100 || $status > 599) {
+            $status = 500;
+        }
+    
         return $this->render(
             $request,
             $response,
             "Failed to process action",
-            $exception->getCode() ?: 500,
+            $status,
             $exception->getMessage() ?: "Unknown error",
             $this->displayErrorDetails ? get_class($exception) : "about:blank",
             $this->displayErrorDetails ? $exception->getTraceAsString() : ""
