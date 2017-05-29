@@ -19,6 +19,7 @@ use Eukles\Service\ResponseFormatter\ResponseFormatterInterface;
 use Eukles\Service\Router\RouterInterface;
 use Eukles\Service\RoutesClasses\Exception\RoutesClassesServiceMissingException;
 use Eukles\Service\RoutesClasses\RoutesClassesInterface;
+use Eukles\Service\XssCleaner\XssCleanerInterface;
 use Eukles\Slim\Handlers\ActionError;
 use Eukles\Slim\Handlers\ActionErrorInterface;
 use Eukles\Slim\Handlers\EntityRequestError;
@@ -198,5 +199,13 @@ class Container extends SlimContainer implements ContainerInterface
     public function getRoutesClasses()
     {
         return $this[self::ROUTES_CLASSES];
+    }
+    
+    /**
+     * @return XssCleanerInterface
+     */
+    public function getXssCleaner()
+    {
+        return $this[self::XSS_CLEANER];
     }
 }

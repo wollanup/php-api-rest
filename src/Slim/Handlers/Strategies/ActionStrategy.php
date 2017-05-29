@@ -140,19 +140,24 @@ class ActionStrategy implements InvocationStrategyInterface
                     );
                 }
             } else {
-                
+                $cleaner = $this->container->getXssCleaner();
                 if (isset($routeArguments[$name])) {
-                    $buildParams[] = $routeArguments[$name];
+                    $paramValue = $routeArguments[$name];
                 } elseif (isset($requestParams[$name])) {
-                    $buildParams[] = $requestParams[$name];
+                    $paramValue = $requestParams[$name];
                 } elseif (($p = $request->getAttribute($name)) !== null) {
-                    $buildParams[] = $p;
+                    $paramValue = $p;
                 } elseif ($param->isDefaultValueAvailable()) {
-                    $buildParams[] = $param->getDefaultValue();
+                    $paramValue = $param->getDefaultValue();
                 } else {
                     throw new \InvalidArgumentException(
                         "Missing or null required parameter '{$name}' in " . $r->getName() . "::" . $m->getName()
                     );
+                }
+                if (is_array($paramValue)) {
+                    $buildParams[] = $cleaner->cleanArray($paramValue);
+                } elseif (is_scalar($paramValue)) {
+                    $buildParams[] = $cleaner->cleanString($paramValue);
                 }
             }
         }
