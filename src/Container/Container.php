@@ -19,6 +19,7 @@ use Eukles\Service\ResponseFormatter\ResponseFormatterInterface;
 use Eukles\Service\Router\RouterInterface;
 use Eukles\Service\RoutesClasses\Exception\RoutesClassesServiceMissingException;
 use Eukles\Service\RoutesClasses\RoutesClassesInterface;
+use Eukles\Service\XssCleaner\XssCleaner;
 use Eukles\Service\XssCleaner\XssCleanerInterface;
 use Eukles\Slim\Handlers\ActionError;
 use Eukles\Slim\Handlers\ActionErrorInterface;
@@ -38,7 +39,7 @@ use Slim\Http\Request;
  */
 class Container extends SlimContainer implements ContainerInterface
 {
-
+    
     /**
      * Container constructor.
      *
@@ -49,14 +50,14 @@ class Container extends SlimContainer implements ContainerInterface
     public function __construct(array $values = [])
     {
         parent::__construct($values);
-
+    
         # Default Found Handler
         if (!isset($values[self::HANDLER])) {
             $this[self::HANDLER] = function (ContainerInterface $c) {
                 return new ActionStrategy($c);
             };
         }
-
+    
         # Default Request Query Modifier (Do nothing),
         # Use your own implementation of RequestQueryModifierInterface
         if (!isset($values[self::ENTITY_FACTORY])) {
@@ -80,7 +81,7 @@ class Container extends SlimContainer implements ContainerInterface
                 return new RequestQueryModifier($c->getRequest());
             };
         }
-
+    
         # Default Response Builder (Do nothing),
         # Use your own implementation of RequestQueryModifierInterface
         if (!isset($values[self::RESPONSE_BUILDER])) {
@@ -117,6 +118,13 @@ class Container extends SlimContainer implements ContainerInterface
         if (!isset($values[self::ACTION_ERROR_HANDLER])) {
             $this[self::ACTION_ERROR_HANDLER] = function () {
                 return new ActionError();
+            };
+        }
+    
+        # Xss cleaner
+        if (!isset($values[self::XSS_CLEANER])) {
+            $this[self::XSS_CLEANER] = function () {
+                return new XssCleaner();
             };
         }
     }
