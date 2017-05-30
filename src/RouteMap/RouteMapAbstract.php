@@ -212,19 +212,29 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
         return $this->resourceName !== $this->packageName;
     }
     
+    /**
+     * @param $routeName
+     *
+     * @deprecated remove ASAP
+     * @return string
+     */
     private function trailingSlash($routeName)
     {
+        if (substr_count($routeName, ']') > 1) {
+            // Unmanaged
+            return $routeName;
+        }
         if (substr($routeName, -1) === ']') {
             $routeName = rtrim($routeName, ']');
             $routeName .= '/]';
-            
+    
             return $routeName;
         }
-        
+    
         if (substr($routeName, -1) !== '/') {
             $routeName .= '/';
         }
-        
+    
         return $routeName;
     }
 }
