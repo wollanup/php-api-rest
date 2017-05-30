@@ -115,7 +115,7 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
             # Add prefix before resource
             array_unshift($prefixes, $this->routesPrefix);
         }
-        $pattern = implode('/', $prefixes) . $pattern;
+        $pattern = $this->trailingSlash(implode('/', $prefixes) . $pattern);
         $pattern = '/' . ltrim($pattern, '/');
         $route->setPattern($pattern);
     
@@ -210,5 +210,21 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
         }
     
         return $this->resourceName !== $this->packageName;
+    }
+    
+    private function trailingSlash($routeName)
+    {
+        if (substr($routeName, -1) === ']') {
+            $routeName = rtrim($routeName, ']');
+            $routeName .= '/]';
+            
+            return $routeName;
+        }
+        
+        if (substr($routeName, -1) !== '/') {
+            $routeName .= '/';
+        }
+        
+        return $routeName;
     }
 }
