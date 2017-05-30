@@ -232,7 +232,7 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
         }
     
         if (substr($routeName, -1) !== '/') {
-            $routeName .= '/';
+            $routeName .= '[/]';
         }
     
         return $routeName;
