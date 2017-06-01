@@ -1,4 +1,5 @@
 <?php
+
 namespace Eukles\Slim\Handlers\Strategies;
 
 use Eukles\Action;
@@ -76,14 +77,13 @@ class ActionStrategy implements InvocationStrategyInterface
         ServerRequestInterface $request,
         ResponseInterface $response,
         array $routeArguments
-    )
-    {
-    
+    ) {
+        
         try {
             return call_user_func_array($callable, $this->buildParams($callable, $request, $routeArguments));
         } catch (\Exception $e) {
             $handler = $this->container->getActionErrorHandler();
-        
+    
             return $handler($e, $request, $response);
         }
     }
@@ -158,6 +158,8 @@ class ActionStrategy implements InvocationStrategyInterface
                     $buildParams[] = $cleaner->cleanArray($paramValue);
                 } elseif (is_scalar($paramValue)) {
                     $buildParams[] = $cleaner->cleanString($paramValue);
+                } else {
+                    $buildParams[] = $paramValue;
                 }
             }
         }
