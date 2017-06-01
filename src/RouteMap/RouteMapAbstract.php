@@ -25,7 +25,7 @@ use Psr\Container\ContainerInterface;
  */
 abstract class RouteMapAbstract extends DataIterator implements RouteMapInterface
 {
-
+    
     /**
      * @var string|ActionInterface
      */
@@ -115,6 +115,7 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
             # Add prefix before resource
             array_unshift($prefixes, $this->routesPrefix);
         }
+        $pattern = $this->trailingSlash($pattern);
         $pattern = implode('/', $prefixes) . $pattern;
         $pattern = '/' . ltrim($pattern, '/');
         $route->setPattern($pattern);
@@ -210,5 +211,21 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
         }
     
         return $this->resourceName !== $this->packageName;
+    }
+    
+    /**
+     * @param $routeName
+     *
+     * @deprecated remove ASAP
+     * @return string
+     */
+    private function trailingSlash($routeName)
+    {
+        $routeName = rtrim($routeName, ']');
+        $routeName = rtrim($routeName, '[/');
+        $missing   = substr_count($routeName, '[') - substr_count($routeName, ']');
+        $routeName .= '[/]' . str_repeat(']', $missing);
+        
+        return $routeName;
     }
 }
