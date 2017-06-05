@@ -95,7 +95,7 @@ class Route extends \Slim\Route implements RouteInterface
         $this->callable = sprintf('%s:%s', $this->getActionClass(), $this->getActionMethod());
         if ($this->isMakeInstance()) {
             $route = $this;
-            if ($this->getVerb() === Route::POST && !$this->instanceForceFetch) {
+            if ($this->isMakeInstanceCreate()) {
                 # POST : create
                 $this->add(function ($request, $response, $next) use ($route) {
                     $requestClass = $route->getRequestClass();
@@ -340,6 +340,22 @@ class Route extends \Slim\Route implements RouteInterface
     public function isMakeInstance()
     {
         return $this->instanceFromPk;
+    }
+    
+    /**
+     * @return bool
+     */
+    public function isMakeInstanceCreate()
+    {
+        return $this->getVerb() === Route::POST && !$this->instanceForceFetch;
+    }
+    
+    /**
+     * @return bool
+     */
+    public function isMakeInstanceFetch()
+    {
+        return !$this->isMakeInstanceCreate();
     }
     
     /**
