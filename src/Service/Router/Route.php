@@ -21,6 +21,10 @@ class Route extends \Slim\Route implements RouteInterface
     /**
      * @var bool
      */
+    protected $deprecated = false;
+    /**
+     * @var bool
+     */
     protected $instanceForceFetch = false;
     /**
      * @var string
@@ -138,12 +142,22 @@ class Route extends \Slim\Route implements RouteInterface
                     $next,
                     $route->getNameOfInjectedParam()
                 );
-        
+    
                 return $response;
             });
         }
         
         $router->addResourceRoute($this);
+    }
+    
+    /**
+     * @inheritdoc
+     */
+    public function deprecated()
+    {
+        $this->deprecated = true;
+        
+        return $this;
     }
     
     /**

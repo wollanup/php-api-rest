@@ -35,10 +35,6 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
      */
     protected $container;
     /**
-     * @var bool
-     */
-    protected $deprecated = false;
-    /**
      * @var string
      */
     protected $packageName;
@@ -69,16 +65,6 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
     /**
      * @inheritdoc
      */
-    public function deprecated()
-    {
-        $this->deprecated = true;
-        
-        return $this;
-    }
-    
-    /**
-     * @inheritdoc
-     */
     public function getActionClass()
     {
         return $this->actionClass;
@@ -98,6 +84,14 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
     public function getPackage()
     {
         return ($this->isSubResourceOfPackage()) ? $this->packageName : $this->resourceName;
+    }
+    
+    /**
+     * @return string
+     */
+    public function getPrefix()
+    {
+        return $this->routesPrefix;
     }
     
     /**
@@ -238,7 +232,6 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
     /**
      * @param $routeName
      *
-     * @deprecated remove ASAP
      * @return string
      */
     private function trailingSlash($routeName)
