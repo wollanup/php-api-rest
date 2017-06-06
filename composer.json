@@ -21,9 +21,9 @@
   },
   "require": {
     "propel/propel": "~2.0@dev",
-    "wollanup/php-api-rest-interfaces": "1.1.7",
+    "wollanup/php-api-rest-interfaces": "^1.1.9",
     "wollanup/php-api-rest-propel-behavior": "^1.1",
-    "wollanup/php-api-rest-service-request": "^1.0",
+    "wollanup/php-api-rest-service-request": "^1.0.1",
     "wollanup/php-api-rest-utils": "^1.1",
     "crell/api-problem": "^2.0",
     "akrabat/rka-content-type-renderer": "^0.7.3"
