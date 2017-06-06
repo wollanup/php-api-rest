@@ -341,6 +341,14 @@ class Route extends \Slim\Route implements RouteInterface
     }
     
     /**
+     * @return bool
+     */
+    public function isDeprecated()
+    {
+        return $this->deprecated;
+    }
+    
+    /**
      * @return boolean
      */
     public function isMakeCollection()
