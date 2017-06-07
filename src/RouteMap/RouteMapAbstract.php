@@ -63,6 +63,62 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
     }
     
     /**
+     * @param $method
+     * @param $pattern
+     *
+     * @return RouteInterface
+     */
+    public function add($method, $pattern)
+    {
+        $route = new Route($this, $method);
+        $route->setContainer($this->container);
+        $route->setActionClass($this->actionClass);
+        $route->setRequestClass($this->requestClass);
+        $route->setPackage($this->getPackage());
+        $prefixes = [$this->resourceName];
+        if ($this->isSubResourceOfPackage()) {
+            # Add package before resource
+            array_unshift($prefixes, $this->packageName);
+        }
+        if ($this->routesPrefix) {
+            # Add prefix before resource
+            array_unshift($prefixes, $this->routesPrefix);
+        }
+        $pattern = $this->trailingSlash($pattern);
+        $pattern = implode('/', $prefixes) . $pattern;
+        $pattern = '/' . ltrim($pattern, '/');
+        $route->setPattern($pattern);
+    
+        $this->data[] = $route;
+        
+        return $route;
+    }
+    
+    /**
+     * self::add('DELETE', $pattern) shortcut
+     *
+     * @param $pattern
+     *
+     * @return RouteInterface
+     */
+    public function delete($pattern)
+    {
+        return $this->add(Route::DELETE, $pattern);
+    }
+    
+    /**
+     * self::add('GET', $pattern) shortcut
+     *
+     * @param $pattern
+     *
+     * @return RouteInterface
+     */
+    public function get($pattern)
+    {
+        return $this->add(Route::GET, $pattern);
+    }
+    
+    /**
      * @inheritdoc
      */
     public function getActionClass()
@@ -116,67 +172,47 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
         return $this->resourceName !== $this->packageName;
     }
     
+    /**
+     * self::add('PATCH', $pattern) shortcut
+     *
+     * @param $pattern
+     *
+     * @return RouteInterface
+     */
+    public function patch($pattern)
+    {
+        return $this->add(Route::PATCH, $pattern);
+    }
+    
+    /**
+     * self::add('POST', $pattern) shortcut
+     *
+     * @param $pattern
+     *
+     * @return RouteInterface
+     */
+    public function post($pattern)
+    {
+        return $this->add(Route::POST, $pattern);
+    }
+    
+    /**
+     * self::add('PUT', $pattern) shortcut
+     *
+     * @param $pattern
+     *
+     * @return RouteInterface
+     */
+    public function put($pattern)
+    {
+        return $this->add(Route::PUT, $pattern);
+    }
+    
     final public function registerRoutes(RouterInterface $router)
     {
         foreach ($this->data as $Route) {
             $Route->bindToRouter($router);
         }
-    }
-    
-    /**
-     * @param $method
-     * @param $pattern
-     *
-     * @return RouteInterface
-     */
-    final protected function add($method, $pattern)
-    {
-        $route = new Route($this, $method);
-        $route->setContainer($this->container);
-        $route->setActionClass($this->actionClass);
-        $route->setRequestClass($this->requestClass);
-        $route->setPackage($this->getPackage());
-        $prefixes = [$this->resourceName];
-        if ($this->isSubResourceOfPackage()) {
-            # Add package before resource
-            array_unshift($prefixes, $this->packageName);
-        }
-        if ($this->routesPrefix) {
-            # Add prefix before resource
-            array_unshift($prefixes, $this->routesPrefix);
-        }
-        $pattern = $this->trailingSlash($pattern);
-        $pattern = implode('/', $prefixes) . $pattern;
-        $pattern = '/' . ltrim($pattern, '/');
-        $route->setPattern($pattern);
-    
-        $this->data[] = $route;
-        
-        return $route;
-    }
-    
-    /**
-     * self::add('DELETE', $pattern) shortcut
-     *
-     * @param $pattern
-     *
-     * @return RouteInterface
-     */
-    final protected function delete($pattern)
-    {
-        return $this->add(Route::DELETE, $pattern);
-    }
-    
-    /**
-     * self::add('GET', $pattern) shortcut
-     *
-     * @param $pattern
-     *
-     * @return RouteInterface
-     */
-    final protected function get($pattern)
-    {
-        return $this->add(Route::GET, $pattern);
     }
     
     /**
@@ -192,42 +228,6 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
      * @return mixed
      */
     abstract protected function initialize();
-    
-    /**
-     * self::add('PATCH', $pattern) shortcut
-     *
-     * @param $pattern
-     *
-     * @return RouteInterface
-     */
-    final protected function patch($pattern)
-    {
-        return $this->add(Route::PATCH, $pattern);
-    }
-    
-    /**
-     * self::add('POST', $pattern) shortcut
-     *
-     * @param $pattern
-     *
-     * @return RouteInterface
-     */
-    final protected function post($pattern)
-    {
-        return $this->add(Route::POST, $pattern);
-    }
-    
-    /**
-     * self::add('PUT', $pattern) shortcut
-     *
-     * @param $pattern
-     *
-     * @return RouteInterface
-     */
-    final protected function put($pattern)
-    {
-        return $this->add(Route::PUT, $pattern);
-    }
     
     /**
      * @param $routeName
