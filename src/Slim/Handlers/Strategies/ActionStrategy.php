@@ -140,7 +140,6 @@ class ActionStrategy implements InvocationStrategyInterface
                     );
                 }
             } else {
-                $cleaner = $this->container->getXssCleaner();
                 if (isset($routeArguments[$name])) {
                     $paramValue = $routeArguments[$name];
                 } elseif (isset($requestParams[$name])) {
@@ -154,13 +153,7 @@ class ActionStrategy implements InvocationStrategyInterface
                         "Missing or null required parameter '{$name}' in " . $r->getName() . "::" . $m->getName()
                     );
                 }
-                if (is_array($paramValue)) {
-                    $buildParams[] = $cleaner->cleanArray($paramValue);
-                } elseif (is_scalar($paramValue)) {
-                    $buildParams[] = $cleaner->cleanString($paramValue);
-                } else {
-                    $buildParams[] = $paramValue;
-                }
+                $buildParams[] = $paramValue;
             }
         }
         
