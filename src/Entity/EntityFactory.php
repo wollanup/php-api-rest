@@ -43,9 +43,7 @@ class EntityFactory implements EntityFactoryInterface
     
         # Then, alter object with allowed properties
         /** @noinspection PhpUndefinedMethodInspection */
-        $params = $entityRequest->getContainer()->getXssCleaner()->cleanArray($request->getParams());
-        /** @noinspection PhpUndefinedMethodInspection */
-        $obj->fromArray($entityRequest->getAllowedDataFromRequest($params, $request->getMethod()));
+        $obj->fromArray($entityRequest->getAllowedDataFromRequest($request->getParams(), $request->getMethod()));
     
         # Execute afterCreate hook, which can alter record
         $entityRequest->afterCreate($obj);
@@ -115,7 +113,6 @@ class EntityFactory implements EntityFactoryInterface
         if ($postParams) {
             $params = array_merge($params, (array)$postParams);
         }
-        $params = $entityRequest->getContainer()->getXssCleaner()->cleanArray($params);
         
         # Then, alter object with allowed properties
         $obj->fromArray($entityRequest->getAllowedDataFromRequest($params, $request->getMethod()));
