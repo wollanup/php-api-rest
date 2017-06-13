@@ -27,6 +27,10 @@ class Route extends \Slim\Route implements RouteInterface
      */
     protected $instanceForceFetch = false;
     /**
+     * @var bool
+     */
+    protected $useRequest = true;
+    /**
      * @var string
      */
     private $actionClass;
@@ -109,7 +113,8 @@ class Route extends \Slim\Route implements RouteInterface
                         $request,
                         $response,
                         $next,
-                        $route->getNameOfInjectedParam()
+                        $route->getNameOfInjectedParam(),
+                        $this->hasToUseRequest()
                     );
                     
                     return $response;
@@ -124,7 +129,8 @@ class Route extends \Slim\Route implements RouteInterface
                         $request,
                         $response,
                         $next,
-                        $route->getNameOfInjectedParam()
+                        $route->getNameOfInjectedParam(),
+                        $this->hasToUseRequest()
                     );
                     
                     return $response;
@@ -331,6 +337,14 @@ class Route extends \Slim\Route implements RouteInterface
     }
     
     /**
+     * @inheritdoc
+     */
+    public function hasToUseRequest()
+    {
+        return $this->useRequest;
+    }
+    
+    /**
      * @return RouteInterface
      */
     public function instanceFetch()
@@ -414,6 +428,16 @@ class Route extends \Slim\Route implements RouteInterface
     public function setIdentifier($identifier)
     {
         $this->identifier = $identifier;
+        
+        return $this;
+    }
+    
+    /**
+     * @inheritdoc
+     */
+    public function useRequest($bool)
+    {
+        $this->useRequest = $bool;
         
         return $this;
     }
