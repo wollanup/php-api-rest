@@ -10,7 +10,6 @@ namespace Eukles\Entity;
 
 use Eukles\Action\ActionInterface;
 use Eukles\Util\PksFinder;
-use Propel\Runtime\Exception\EntityNotFoundException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -20,11 +19,12 @@ class EntityFactory implements EntityFactoryInterface
     /**
      * Create a new instance of activeRecord and add it to Request attributes
      *
-     * @param EntityRequestInterface       $entityRequest
-     * @param ServerRequestInterface       $request
-     * @param ResponseInterface            $response
-     * @param callable                     $next
-     * @param                              $nameOfParameterToAdd
+     * @param EntityRequestInterface $entityRequest
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface      $response
+     * @param callable               $next
+     * @param string                 $nameOfParameterToAdd
+     * @param bool                   $useRequestParameters
      *
      * @return ResponseInterface
      */
@@ -33,7 +33,9 @@ class EntityFactory implements EntityFactoryInterface
         ServerRequestInterface $request,
         ResponseInterface $response,
         callable $next,
-        $nameOfParameterToAdd = null
+        $nameOfParameterToAdd = null,
+        $useRequestParameters = true
+
     ) {
         # make a new empty record
         $obj = $entityRequest->instantiateActiveRecord();
@@ -42,8 +44,10 @@ class EntityFactory implements EntityFactoryInterface
         $entityRequest->beforeCreate($obj);
     
         # Then, alter object with allowed properties
-        /** @noinspection PhpUndefinedMethodInspection */
-        $obj->fromArray($entityRequest->getAllowedDataFromRequest($request->getParams(), $request->getMethod()));
+        if ($useRequestParameters) {
+            /** @noinspection PhpUndefinedMethodInspection */
+            $obj->fromArray($entityRequest->getAllowedDataFromRequest($request->getParams(), $request->getMethod()));
+        }
     
         # Execute afterCreate hook, which can alter record
         $entityRequest->afterCreate($obj);
@@ -62,21 +66,22 @@ class EntityFactory implements EntityFactoryInterface
     /**
      * Fetch an existing instance of activeRecord and add it to Request attributes
      *
-     * @param EntityRequestInterface       $entityRequest
-     * @param ServerRequestInterface       $request
-     * @param ResponseInterface            $response
-     * @param callable                     $next
-     * @param                              $nameOfParameterToAdd
+     * @param EntityRequestInterface $entityRequest
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface      $response
+     * @param callable               $next
+     * @param string                 $nameOfParameterToAdd
+     * @param bool                   $useRequestParameters
      *
      * @return ResponseInterface
-     * @throws EntityNotFoundException
      */
     public function fetch(
         EntityRequestInterface $entityRequest,
         ServerRequestInterface $request,
         ResponseInterface $response,
         callable $next,
-        $nameOfParameterToAdd = null
+        $nameOfParameterToAdd = null,
+        $useRequestParameters = true
     ) {
     
         # First, we try to determine PK in request path (most common case)
@@ -108,14 +113,16 @@ class EntityFactory implements EntityFactoryInterface
         }
     
         # Get request params
-        $params     = $request->getQueryParams();
-        $postParams = $request->getParsedBody();
-        if ($postParams) {
-            $params = array_merge($params, (array)$postParams);
-        }
+        if ($useRequestParameters) {
+            $params     = $request->getQueryParams();
+            $postParams = $request->getParsedBody();
+            if ($postParams) {
+                $params = array_merge($params, (array)$postParams);
+            }
         
-        # Then, alter object with allowed properties
-        $obj->fromArray($entityRequest->getAllowedDataFromRequest($params, $request->getMethod()));
+            # Then, alter object with allowed properties
+            $obj->fromArray($entityRequest->getAllowedDataFromRequest($params, $request->getMethod()));
+        }
     
         # Then, execute afterFetch hook, which can alter the object
         $entityRequest->afterFetch($obj);
