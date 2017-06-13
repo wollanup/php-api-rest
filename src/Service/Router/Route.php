@@ -114,7 +114,7 @@ class Route extends \Slim\Route implements RouteInterface
                         $response,
                         $next,
                         $route->getNameOfInjectedParam(),
-                        $this->hasToUseRequest()
+                        $route->hasToUseRequest()
                     );
                     
                     return $response;
@@ -130,7 +130,7 @@ class Route extends \Slim\Route implements RouteInterface
                         $response,
                         $next,
                         $route->getNameOfInjectedParam(),
-                        $this->hasToUseRequest()
+                        $route->hasToUseRequest()
                     );
                     
                     return $response;
