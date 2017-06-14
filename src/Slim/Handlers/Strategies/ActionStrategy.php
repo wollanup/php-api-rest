@@ -12,7 +12,6 @@ use Eukles\Slim\Handlers\ApiProblemRendererTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
-use Slim\Http\Request;
 use Slim\Interfaces\InvocationStrategyInterface;
 
 /**
@@ -43,10 +42,10 @@ class ActionStrategy implements InvocationStrategyInterface
      * Invoke a route callable with request, response and all route parameters
      * as individual arguments.
      *
-     * @param array|callable                 $callable
-     * @param ServerRequestInterface|Request $request
-     * @param ResponseInterface              $response
-     * @param array                          $routeArguments
+     * @param array|callable         $callable
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface      $response
+     * @param array                  $routeArguments
      *
      * @return mixed
      */
@@ -92,7 +91,7 @@ class ActionStrategy implements InvocationStrategyInterface
      * Build list of parameters needed by Action::method
      *
      * @param callable|array                 $callable
-     * @param ServerRequestInterface|Request $request
+     * @param ServerRequestInterface         $request
      * @param                                $routeArguments
      *
      * @return array
@@ -114,8 +113,13 @@ class ActionStrategy implements InvocationStrategyInterface
         if (empty($paramsMethod)) {
             return [];
         }
-        
-        $requestParams = $request->getParams();
+    
+        $requestParams = $request->getQueryParams();
+        $postParams    = $request->getParsedBody();
+        if ($postParams) {
+            $requestParams = array_merge($requestParams, (array)$postParams);
+        }
+            
         $buildParams   = [];
         
         /** @var \ReflectionParameter[] $params */
@@ -190,10 +194,10 @@ class ActionStrategy implements InvocationStrategyInterface
     /**
      * Call action with built params
      *
-     * @param callable                       $callable
-     * @param ServerRequestInterface|Request $request
-     * @param ResponseInterface              $response
-     * @param array                          $routeArguments
+     * @param callable               $callable
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface      $response
+     * @param array                  $routeArguments
      *
      * @return mixed
      * @throws ResponseBuilderException
