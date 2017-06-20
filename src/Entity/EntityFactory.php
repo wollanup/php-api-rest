@@ -104,7 +104,7 @@ class EntityFactory implements EntityFactoryInterface
     
         # Now get the primary key in its final form
         $pk = $entityRequest->getPrimaryKey();
-        if (empty($pk)) {
+        if (null === $pk) {
             $handler = $entityRequest->getContainer()->getEntityRequestErrorHandler();
     
             return $handler->primaryKeyNotFound($entityRequest, $request, $response);
