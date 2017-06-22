@@ -185,7 +185,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     final public function getExposedProperties()
     {
         if (null === $this->exposedProperties) {
-            $this->exposedProperties = array_diff($this->getVisibleFields(), $this->getHiddenProperties());
+            $this->exposedProperties = array_diff($this->getVisibleFields(), $this->getHiddenFieldsAndRelations());
         }
         
         return $this->exposedProperties;
