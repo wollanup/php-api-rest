@@ -201,7 +201,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     final public function getExposedRelations()
     {
         if (null === $this->exposedRelations) {
-            $this->exposedRelations = array_diff($this->getRelationsNames(), $this->getHiddenProperties());
+            $this->exposedRelations = array_diff($this->getRelationsNames(), $this->getHiddenFieldsAndRelations());
         }
         
         return $this->exposedRelations;
