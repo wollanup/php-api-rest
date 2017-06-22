@@ -1,4 +1,5 @@
 <?php
+
 namespace Eukles\Entity;
 
 use Eukles\Container\ContainerInterface;
@@ -21,6 +22,14 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
      */
     protected $container;
     /**
+     * @var array
+     */
+    protected $exposedProperties;
+    /**
+     * @var array
+     */
+    protected $exposedRelations;
+    /**
      * @var int|string
      */
     protected $pk;
@@ -42,12 +51,17 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     }
     
     /**
-     * Set state of the object after request data hydration
-     *
-     * @param ActiveRecordInterface $obj
-     *
+     * @return string
      */
-    public function afterCreate(ActiveRecordInterface $obj) { }
+    abstract public function getActionClassName();
+    
+    /**
+     * All properties of ActiveRecord
+     *
+     * @return array
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    abstract protected function getAllProperties();
     
     /**
      * Set state of the object after request data hydration
@@ -55,7 +69,19 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
      * @param ActiveRecordInterface $obj
      *
      */
-    public function afterFetch(ActiveRecordInterface $obj) { }
+    public function afterCreate(ActiveRecordInterface $obj)
+    {
+    }
+    
+    /**
+     * Set state of the object after request data hydration
+     *
+     * @param ActiveRecordInterface $obj
+     *
+     */
+    public function afterFetch(ActiveRecordInterface $obj)
+    {
+    }
     
     /**
      * Set state of the object before request data hydration
@@ -63,7 +89,9 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
      * @param ActiveRecordInterface $obj
      *
      */
-    public function beforeCreate(ActiveRecordInterface $obj) { }
+    public function beforeCreate(ActiveRecordInterface $obj)
+    {
+    }
     
     /**
      * Set state of the object before request data hydration
@@ -78,15 +106,34 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
         return $query;
     }
     
-    public function getActionClassName()
+    /**
+     * None, all or partial list of properties
+     *
+     * @return array List of modifiable properties
+     */
+    public function getModifiableProperties()
     {
-        $tableMap     = $this->getTableMap();
-        $package      = $tableMap->getPackage();
-        $packageArray = explode('.', $package);
-        array_pop($packageArray);
-        $parentNs = implode('\\', $packageArray);
-        
-        return sprintf('%s\\Action\\%sAction', $parentNs, $tableMap->getPhpName());
+        return $this->getWritableProperties();
+    }
+    
+    /**
+     * None, all or partial list of properties
+     *
+     * @return array List of writable properties
+     */
+    public function getRequiredWritableProperties()
+    {
+        return $this->getWritableProperties();
+    }
+    
+    /**
+     * None, all or partial list of properties
+     *
+     * @return array List of writable properties
+     */
+    public function getWritableProperties()
+    {
+        return $this->getAllProperties();
     }
     
     /**
@@ -97,7 +144,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
      *
      * @return array
      */
-    public function getAllowedDataFromRequest(array $requestParams, $httpMethod)
+    final public function getAllowedDataFromRequest(array $requestParams, $httpMethod)
     {
         if (in_array($httpMethod, ['PATCH', 'PUT'])) {
             $properties = $this->getModifiableProperties();
@@ -123,15 +170,47 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     /**
      * @return ContainerInterface
      */
-    public function getContainer()
+    final public function getContainer()
     {
         return $this->container;
     }
     
     /**
+     * None, all or partial list of properties
+     *
+     * Adds visible fields, and remove hidden Properties
+     *
+     * @return array List of visible properties
+     */
+    final public function getExposedProperties()
+    {
+        if (null === $this->exposedProperties) {
+            $this->exposedProperties = array_diff($this->getVisibleFields(), $this->getHiddenProperties());
+        }
+        
+        return $this->exposedProperties;
+    }
+    
+    /**
+     * None, all or partial list of relations
+     *
+     * Adds visible relations, and remove hidden Properties
+     *
+     * @return array List of visible properties
+     */
+    final public function getExposedRelations()
+    {
+        if (null === $this->exposedRelations) {
+            $this->exposedRelations = array_diff($this->getRelationsNames(), $this->getHiddenProperties());
+        }
+        
+        return $this->exposedRelations;
+    }
+    
+    /**
      * @return int|string
      */
-    public function getPrimaryKey()
+    final public function getPrimaryKey()
     {
         return $this->pk;
     }
@@ -233,7 +312,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     /**
      * @inheritdoc
      */
-    public function setPrimaryKey($pk)
+    final public function setPrimaryKey($pk)
     {
         $this->pk = $pk;
         
@@ -255,5 +334,25 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
                 $this->relations[$relation->getName()] = $relation;
             }
         }
+    }
+    
+    /**
+     * None, all or partial list of properties
+     *
+     * @return array List of hidden properties
+     */
+    protected function getHiddenFieldsAndRelations()
+    {
+        return [];
+    }
+    
+    /**
+     * None, all or partial list of fields
+     *
+     * @return array List of visible properties
+     */
+    protected function getVisibleFields()
+    {
+        return $this->getAllProperties();
     }
 }
