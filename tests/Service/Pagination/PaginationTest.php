@@ -6,8 +6,10 @@
  * Time: 09:17
  */
 
-namespace Eukles\Service\Pagination;
+namespace Test\Eukles\Service\Pagination;
 
+use Eukles\Service\Pagination\Pagination;
+use Eukles\Service\Pagination\PaginationInterface;
 use PHPUnit\Framework\TestCase;
 
 class PaginationTest extends TestCase
