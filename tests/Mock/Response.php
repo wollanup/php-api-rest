@@ -6,7 +6,7 @@
  * Time: 10:13
  */
 
-namespace Eukles\Mock;
+namespace Test\Eukles\Mock;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;

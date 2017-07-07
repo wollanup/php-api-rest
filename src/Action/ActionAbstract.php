@@ -40,6 +40,12 @@ abstract class ActionAbstract implements ActionInterface
     public function __construct(ContainerInterface $c)
     {
         $this->container = $c;
+        if ($c->has('request')) {
+            $this->request = $c['request'];
+        }
+        if ($c->has('response')) {
+            $this->response = $c['response'];
+        }
     }
     
     /**

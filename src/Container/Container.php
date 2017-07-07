@@ -8,6 +8,7 @@
 
 namespace Eukles\Container;
 
+use Eukles\Config\Config;
 use Eukles\Entity\EntityFactory;
 use Eukles\Entity\EntityFactoryInterface;
 use Eukles\Service\Pagination\RequestPaginationInterface;
@@ -48,14 +49,25 @@ class Container extends SlimContainer implements ContainerInterface
     public function __construct(array $values = [])
     {
         parent::__construct($values);
-    
+        
+        /**
+         * Config Service
+         *
+         * Must be very first service added to Container, other services can use it in their creation
+         *
+         * @return Config
+         */
+        $this['config'] = function () use ($values) {
+            return new Config($values['settings']);
+        };
+        
         # Default Found Handler
         if (!isset($values[self::HANDLER])) {
             $this[self::HANDLER] = function (ContainerInterface $c) {
                 return new ActionStrategy($c);
             };
         }
-    
+        
         # Default Request Query Modifier (Do nothing),
         # Use your own implementation of RequestQueryModifierInterface
         if (!isset($values[self::ENTITY_FACTORY])) {
@@ -63,7 +75,7 @@ class Container extends SlimContainer implements ContainerInterface
                 return new EntityFactory($c);
             };
         }
-    
+        
         # Default Request Query Modifier,
         # You can use your own implementation of RequestQueryModifierInterface
         if (!isset($values[self::REQUEST_PAGINATION])) {
@@ -71,7 +83,7 @@ class Container extends SlimContainer implements ContainerInterface
                 return new RequestPagination($c->getRequest());
             };
         }
-    
+        
         # Default Request Query Modifier (Do nothing),
         # Use your own implementation of RequestQueryModifierInterface
         if (!isset($values[self::REQUEST_QUERY_MODIFIER])) {
@@ -79,7 +91,7 @@ class Container extends SlimContainer implements ContainerInterface
                 return new RequestQueryModifier($c->getRequest());
             };
         }
-    
+        
         # Default Response Builder (Do nothing),
         # Use your own implementation of RequestQueryModifierInterface
         if (!isset($values[self::RESPONSE_BUILDER])) {
@@ -89,7 +101,7 @@ class Container extends SlimContainer implements ContainerInterface
                 };
             };
         }
-    
+        
         # Default Response Formatter (Do nothing),
         # Use your own implementation of RequestQueryModifierInterface
         if (!isset($values[self::RESPONSE_FORMATTER])) {
@@ -99,19 +111,19 @@ class Container extends SlimContainer implements ContainerInterface
                         $response->getBody()
                             ->write(is_array($result) ? json_encode($result) : $result);
                     }
-    
+                    
                     return $response;
                 };
             };
         }
-    
+        
         # Default error handler, you can use your own implementation
         if (!isset($values[self::ENTITY_REQUEST_ERROR_HANDLER])) {
             $this[self::ENTITY_REQUEST_ERROR_HANDLER] = function () {
                 return new EntityRequestError();
             };
         }
-    
+        
         # Default error handler, you can use your own implementation
         if (!isset($values[self::ACTION_ERROR_HANDLER])) {
             $this[self::ACTION_ERROR_HANDLER] = function () {
@@ -126,6 +138,14 @@ class Container extends SlimContainer implements ContainerInterface
     public function getActionErrorHandler()
     {
         return $this[self::ACTION_ERROR_HANDLER];
+    }
+    
+    /**
+     * @return Config
+     */
+    public function getConfig()
+    {
+        return $this['config'];
     }
     
     /**
@@ -199,5 +219,4 @@ class Container extends SlimContainer implements ContainerInterface
     {
         return $this[self::ROUTES_CLASSES];
     }
-    
 }

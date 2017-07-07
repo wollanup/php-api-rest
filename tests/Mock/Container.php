@@ -6,7 +6,7 @@
  * Time: 09:47
  */
 
-namespace Eukles\Mock;
+namespace Test\Eukles\Mock;
 
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
