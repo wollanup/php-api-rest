@@ -58,7 +58,7 @@ class Container extends SlimContainer implements ContainerInterface
          * @return Config
          */
         $this['config'] = function () use ($values) {
-            return new Config($values['settings']);
+            return new Config($this['settings']->all());
         };
         
         # Default Found Handler
