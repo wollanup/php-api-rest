@@ -119,7 +119,7 @@ class ActionStrategy implements InvocationStrategyInterface
         if ($postParams) {
             $requestParams = array_merge($requestParams, (array)$postParams);
         }
-            
+    
         $buildParams   = [];
         
         /** @var \ReflectionParameter[] $params */
@@ -137,7 +137,7 @@ class ActionStrategy implements InvocationStrategyInterface
                     $files = $request->getUploadedFiles();
                     $files = array_values($files);
                     /** @var UploadedFileInterface $attachment */
-                    $buildParams[] = $files[0];
+                    $buildParams[] = isset($files[0]) ? $files[0] : null;
                 } else {
                     throw new \InvalidArgumentException(
                         "Missing or null required parameter '{$name}' in " . $r->getName() . "::" . $m->getName()
