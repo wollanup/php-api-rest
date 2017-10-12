@@ -10,7 +10,7 @@ namespace Eukles\Entity\Middleware;
 
 use Eukles\Container\ContainerInterface;
 use Eukles\Container\ContainerTrait;
-use Eukles\Service\Router\Route;
+use Eukles\Service\Router\RouteInterface;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -18,12 +18,12 @@ use Psr\Http\Message\ResponseInterface;
  *
  * @package Eukles\Entity\Middleware
  */
-class EntityFetch
+class EntityFetch implements RouteEntityMiddlewareInterface
 {
     
     use ContainerTrait;
     /**
-     * @var Route
+     * @var RouteInterface
      */
     protected $route;
     
@@ -31,9 +31,9 @@ class EntityFetch
      * EntityFetch constructor.
      *
      * @param ContainerInterface $container
-     * @param Route              $route
+     * @param RouteInterface     $route
      */
-    public function __construct(ContainerInterface $container, Route $route)
+    public function __construct(ContainerInterface $container, RouteInterface $route)
     {
         $this->container = $container;
         $this->route     = $route;
