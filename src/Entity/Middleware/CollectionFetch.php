@@ -18,7 +18,7 @@ use Psr\Http\Message\ResponseInterface;
  *
  * @package Eukles\Entity\Middleware
  */
-class CollectionFetch implements RouteEntityMiddleware
+class CollectionFetch implements RouteEntityMiddlewareInterface
 {
     
     use ContainerTrait;

@@ -18,7 +18,7 @@ use Psr\Http\Message\ResponseInterface;
  *
  * @package Eukles\Entity\Middleware
  */
-class EntityCreate implements RouteEntityMiddleware
+class EntityCreate implements RouteEntityMiddlewareInterface
 {
     
     use ContainerTrait;

@@ -12,7 +12,7 @@ use Eukles\Container\ContainerInterface;
 use Eukles\Service\Router\RouteInterface;
 use Psr\Http\Message\ResponseInterface;
 
-interface RouteEntityMiddleware
+interface RouteEntityMiddlewareInterface
 {
     
     /**
