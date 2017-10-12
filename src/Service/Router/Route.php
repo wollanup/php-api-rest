@@ -9,13 +9,26 @@
 namespace Eukles\Service\Router;
 
 use Eukles\Container\ContainerInterface;
+use Eukles\Container\ContainerTrait;
+use Eukles\Entity\Middleware\CollectionFetch;
+use Eukles\Entity\Middleware\EntityCreate;
+use Eukles\Entity\Middleware\EntityFetch;
 use Eukles\RouteMap\RouteMapInterface;
 use Eukles\Service\Router\Exception\RouteEmptyValueException;
+use Eukles\Slim\DeferredCallable;
 use Zend\Permissions\Acl\Role\GenericRole;
 use Zend\Permissions\Acl\Role\RoleInterface;
 
+/**
+ * Class Route
+ *
+ * @property ContainerInterface $container
+ * @package Eukles\Service\Router
+ */
 class Route extends \Slim\Route implements RouteInterface
 {
+    
+    use ContainerTrait;
     
     protected $collectionFromPks;
     /**
@@ -67,10 +80,10 @@ class Route extends \Slim\Route implements RouteInterface
      */
     private $verb;
     
-    public function __construct(RouteMapInterface $RouteMap, $method)
+    public function __construct(RouteMapInterface $routeMap, $method)
     {
         parent::__construct($method, null, null, [], 0);
-        $this->container = $RouteMap->getContainer();
+        $this->container = $routeMap->getContainer();
         // According to RFC methods are defined in uppercase (See RFC 7231)
         $this->methods = array_map("strtoupper", $this->methods);
     }
@@ -102,55 +115,15 @@ class Route extends \Slim\Route implements RouteInterface
     {
         $this->callable = sprintf('%s:%s', $this->getActionClass(), $this->getActionMethod());
         if ($this->isMakeInstance()) {
-            $route = $this;
             if ($this->isMakeInstanceCreate()) {
                 # POST : create
-                $this->add(function ($request, $response, $next) use ($route) {
-                    $requestClass = $route->getRequestClass();
-                    /** @var ContainerInterface $this */
-                    $response = $this->getEntityFactory()->create(
-                        new $requestClass($this),
-                        $request,
-                        $response,
-                        $next,
-                        $route->getNameOfInjectedParam(),
-                        $route->hasToUseRequest()
-                    );
-                    
-                    return $response;
-                });
+                $this->add(new EntityCreate($this->container, $this));
             } else {
                 # OTHERS : fetch
-                $this->add(function ($request, $response, $next) use ($route) {
-                    $requestClass = $route->getRequestClass();
-                    /** @var ContainerInterface $this */
-                    $response = $this->getEntityFactory()->fetch(
-                        new $requestClass($this),
-                        $request,
-                        $response,
-                        $next,
-                        $route->getNameOfInjectedParam(),
-                        $route->hasToUseRequest()
-                    );
-                    
-                    return $response;
-                });
+                $this->add(new EntityFetch($this->container, $this));
             }
         } elseif ($this->isMakeCollection()) {
-            $route = $this;
-            $this->add(function ($request, $response, $next) use ($route) {
-                $requestClass = $route->getRequestClass();
-                /** @var ContainerInterface $this */
-                $response = $this->getEntityFactory()->fetchCollection(
-                    new $requestClass($this),
-                    $request,
-                    $response,
-                    $next,
-                    $route->getNameOfInjectedParam()
-                );
-    
-                return $response;
-            });
+            $this->add(new CollectionFetch($this->container, $this));
         }
         
         $router->addResourceRoute($this);
@@ -438,6 +411,18 @@ class Route extends \Slim\Route implements RouteInterface
     public function useRequest($bool)
     {
         $this->useRequest = $bool;
+        
+        return $this;
+    }
+    
+    /**
+     * @param callable|string $callable
+     *
+     * @return $this
+     */
+    public function add($callable)
+    {
+        $this->middleware[] = new DeferredCallable($callable, $this->container);
         
         return $this;
     }

@@ -9,6 +9,7 @@
 namespace Eukles\RouteMap;
 
 use Eukles\Action\ActionInterface;
+use Eukles\Container\ContainerTrait;
 use Eukles\Entity\EntityRequestInterface;
 use Eukles\Service\Router\Route;
 use Eukles\Service\Router\RouteInterface;
@@ -26,14 +27,11 @@ use Psr\Container\ContainerInterface;
 abstract class RouteMapAbstract extends DataIterator implements RouteMapInterface
 {
     
+    use ContainerTrait;
     /**
      * @var string|ActionInterface
      */
     protected $actionClass;
-    /**
-     * @var ContainerInterface
-     */
-    protected $container;
     /**
      * @var string
      */
@@ -61,6 +59,20 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
         $this->container = $container;
         $this->initialize();
     }
+    
+    /**
+     * Routes
+     *
+     * ```
+     * $this->add('GET', '/{id:[0-9]+}')
+     *     ->setRoles(['user',])
+     *     ->setActionClass(OtherClass::class)
+     *     ->setActionMethod('get');
+     *```
+     *
+     * @return mixed
+     */
+    abstract protected function initialize();
     
     /**
      * @param $method
@@ -124,14 +136,6 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
     public function getActionClass()
     {
         return $this->actionClass;
-    }
-    
-    /**
-     * @return ContainerInterface
-     */
-    public function getContainer()
-    {
-        return $this->container;
     }
     
     /**
@@ -210,24 +214,10 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
     
     final public function registerRoutes(RouterInterface $router)
     {
-        foreach ($this->data as $Route) {
-            $Route->bindToRouter($router);
+        foreach ($this->data as $route) {
+            $route->bindToRouter($router);
         }
     }
-    
-    /**
-     * Routes
-     *
-     * ```
-     * $this->add('GET', '/{id:[0-9]+}')
-     *     ->setRoles(['user',])
-     *     ->setActionClass(OtherClass::class)
-     *     ->setActionMethod('get');
-     *```
-     *
-     * @return mixed
-     */
-    abstract protected function initialize();
     
     /**
      * @param $routeName
