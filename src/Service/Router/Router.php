@@ -8,6 +8,7 @@
 
 namespace Eukles\Service\Router;
 
+use Eukles\Container\ContainerTrait;
 use Eukles\RouteMap\RouteMapInterface;
 use Eukles\Service\RoutesClasses\RoutesClassesInterface;
 use FastRoute\RouteParser;
@@ -21,6 +22,7 @@ use Psr\Container\ContainerInterface;
 class Router extends \Slim\Router implements RouterInterface
 {
     
+    use ContainerTrait;
     /**
      * @var RouteMapInterface[]
      */
@@ -40,11 +42,11 @@ class Router extends \Slim\Router implements RouterInterface
         RoutesClassesInterface $routesClasses,
         $routerCacheFile
     ) {
+        $this->container = $c;
         parent::__construct($parser);
         $this->setCacheFile($routerCacheFile);
-        foreach ($routesClasses as $className) {
+        foreach ($routesClasses as $routeMap) {
             /** @var RouteMapInterface $routeMap */
-            $routeMap = new $className($c);
             $routeMap->registerRoutes($this);
             $this->routesMap[] = $routeMap;
         }

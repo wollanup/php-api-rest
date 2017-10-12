@@ -17,6 +17,9 @@ class DeferredCallable
     
     use CallableResolverAwareTrait;
     use ContainerTrait;
+    /**
+     * @var callable|string
+     */
     private $callable;
     
     /**
