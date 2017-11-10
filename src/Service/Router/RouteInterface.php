@@ -65,8 +65,11 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
     /**
      * @return string
      */
-    public function getIdentifier(): string;
+    public function getIdentifier();
 
+    /**
+     * @return mixed
+     */
     public function getNameOfInjectedParam();
 
     /**
