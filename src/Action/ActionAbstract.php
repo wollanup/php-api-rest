@@ -18,10 +18,6 @@ abstract class ActionAbstract implements ActionInterface
 
     use ContainerTrait;
     /**
-     * @var ContainerInterface
-     */
-    protected $container;
-    /**
      * @var ServerRequestInterface
      */
     protected $request;
