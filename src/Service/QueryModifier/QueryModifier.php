@@ -12,12 +12,12 @@ use Propel\Runtime\ActiveQuery\ModelCriteria;
 
 class QueryModifier implements QueryModifierInterface
 {
-    
+
     /**
      * @var ModelCriteria
      */
     protected $query;
-    
+
     /**
      * Applies modifiers and merge query if one has been set
      *
@@ -30,10 +30,10 @@ class QueryModifier implements QueryModifierInterface
         if ($this->query) {
             $query->mergeWith($this->query);
         }
-        
+
         return $query;
     }
-    
+
     /**
      * This ModelCriteria will be merged with another one when apply is called
      *
@@ -41,10 +41,10 @@ class QueryModifier implements QueryModifierInterface
      *
      * @return QueryModifierInterface
      */
-    public function setQuery(ModelCriteria $query)
+    public function setQuery(ModelCriteria $query): QueryModifierInterface
     {
         $this->query = $query;
-    
+
         return $this;
     }
 }

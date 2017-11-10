@@ -16,17 +16,18 @@ use Psr\Http\Message\ResponseInterface;
 /**
  * Class CollectionFetch
  *
+ * @todo    refactor
  * @package Eukles\Entity\Middleware
  */
-class CollectionFetch implements RouteEntityMiddlewareInterface
+class CollectionFetch /*implements RouteEntityMiddlewareInterface*/
 {
-    
+
     use ContainerTrait;
     /**
      * @var RouteInterface
      */
     protected $route;
-    
+
     /**
      * CollectionFetch constructor.
      *
@@ -38,7 +39,7 @@ class CollectionFetch implements RouteEntityMiddlewareInterface
         $this->container = $container;
         $this->route     = $route;
     }
-    
+
     /**
      * @param $request
      * @param $response
@@ -57,7 +58,7 @@ class CollectionFetch implements RouteEntityMiddlewareInterface
             $next,
             $this->route->getNameOfInjectedParam()
         );
-        
+
         return $response;
     }
 }

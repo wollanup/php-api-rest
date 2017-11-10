@@ -9,6 +9,7 @@
 namespace Eukles\Container;
 
 use Eukles\Config\Config;
+use Eukles\Config\ConfigInterface;
 use Eukles\Entity\EntityFactory;
 use Eukles\Entity\EntityFactoryInterface;
 use Eukles\Service\Pagination\RequestPaginationInterface;
@@ -26,6 +27,7 @@ use Eukles\Slim\Handlers\EntityRequestError;
 use Eukles\Slim\Handlers\EntityRequestErrorInterface;
 use Eukles\Slim\Handlers\Strategies\ActionStrategy;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Slim\Container as SlimContainer;
 use Slim\Http\Request;
 
@@ -38,7 +40,7 @@ use Slim\Http\Request;
  */
 class Container extends SlimContainer implements ContainerInterface
 {
-    
+
     /**
      * Container constructor.
      *
@@ -49,7 +51,7 @@ class Container extends SlimContainer implements ContainerInterface
     public function __construct(array $values = [])
     {
         parent::__construct($values);
-        
+
         /**
          * Config Service
          *
@@ -60,22 +62,22 @@ class Container extends SlimContainer implements ContainerInterface
         $this['config'] = function () use ($values) {
             return new Config($this['settings']->all());
         };
-        
+
         # Default Found Handler
         if (!isset($values[self::HANDLER])) {
             $this[self::HANDLER] = function (ContainerInterface $c) {
                 return new ActionStrategy($c);
             };
         }
-        
+
         # Default Request Query Modifier (Do nothing),
         # Use your own implementation of RequestQueryModifierInterface
         if (!isset($values[self::ENTITY_FACTORY])) {
-            $this[self::ENTITY_FACTORY] = function (ContainerInterface $c) {
-                return new EntityFactory($c);
+            $this[self::ENTITY_FACTORY] = function () {
+                return new EntityFactory();
             };
         }
-        
+
         # Default Request Query Modifier,
         # You can use your own implementation of RequestQueryModifierInterface
         if (!isset($values[self::REQUEST_PAGINATION])) {
@@ -83,7 +85,7 @@ class Container extends SlimContainer implements ContainerInterface
                 return new RequestPagination($c->getRequest());
             };
         }
-        
+
         # Default Request Query Modifier (Do nothing),
         # Use your own implementation of RequestQueryModifierInterface
         if (!isset($values[self::REQUEST_QUERY_MODIFIER])) {
@@ -91,7 +93,7 @@ class Container extends SlimContainer implements ContainerInterface
                 return new RequestQueryModifier($c->getRequest());
             };
         }
-        
+
         # Default Response Builder (Do nothing),
         # Use your own implementation of RequestQueryModifierInterface
         if (!isset($values[self::RESPONSE_BUILDER])) {
@@ -101,7 +103,7 @@ class Container extends SlimContainer implements ContainerInterface
                 };
             };
         }
-        
+
         # Default Response Formatter (Do nothing),
         # Use your own implementation of RequestQueryModifierInterface
         if (!isset($values[self::RESPONSE_FORMATTER])) {
@@ -111,19 +113,19 @@ class Container extends SlimContainer implements ContainerInterface
                         $response->getBody()
                             ->write(is_array($result) ? json_encode($result) : $result);
                     }
-                    
+
                     return $response;
                 };
             };
         }
-        
+
         # Default error handler, you can use your own implementation
         if (!isset($values[self::ENTITY_REQUEST_ERROR_HANDLER])) {
             $this[self::ENTITY_REQUEST_ERROR_HANDLER] = function () {
                 return new EntityRequestError();
             };
         }
-        
+
         # Default error handler, you can use your own implementation
         if (!isset($values[self::ACTION_ERROR_HANDLER])) {
             $this[self::ACTION_ERROR_HANDLER] = function () {
@@ -131,91 +133,91 @@ class Container extends SlimContainer implements ContainerInterface
             };
         }
     }
-    
+
     /**
      * @return ActionErrorInterface
      */
-    public function getActionErrorHandler()
+    public function getActionErrorHandler(): ActionErrorInterface
     {
         return $this[self::ACTION_ERROR_HANDLER];
     }
-    
+
     /**
-     * @return Config
+     * @return ConfigInterface
      */
-    public function getConfig()
+    public function getConfig(): ConfigInterface
     {
         return $this['config'];
     }
-    
+
     /**
      * @return EntityFactoryInterface
      */
-    public function getEntityFactory()
+    public function getEntityFactory(): EntityFactoryInterface
     {
         return $this[self::ENTITY_FACTORY];
     }
-    
+
     /**
      * @return EntityRequestErrorInterface
      */
-    public function getEntityRequestErrorHandler()
+    public function getEntityRequestErrorHandler(): EntityRequestErrorInterface
     {
         return $this[self::ENTITY_REQUEST_ERROR_HANDLER];
     }
-    
+
     /**
-     * @return Request
+     * @return ServerRequestInterface
      */
-    public function getRequest()
+    public function getRequest(): ServerRequestInterface
     {
         return $this['request'];
     }
-    
+
     /**
      * @return RequestPaginationInterface
      */
-    public function getRequestPagination()
+    public function getRequestPagination(): RequestPaginationInterface
     {
         return $this[self::REQUEST_PAGINATION];
     }
-    
+
     /**
      * @return RequestQueryModifierInterface
      */
-    public function getRequestQueryModifier()
+    public function getRequestQueryModifier(): RequestQueryModifierInterface
     {
         return $this[self::REQUEST_QUERY_MODIFIER];
     }
-    
+
     /**
      * @return ResponseBuilderInterface
      */
-    public function getResponseBuilder()
+    public function getResponseBuilder(): ResponseBuilderInterface
     {
         return $this[self::RESPONSE_BUILDER];
     }
-    
+
     /**
      * @return ResponseFormatterInterface
      */
-    public function getResponseFormatter()
+    public function getResponseFormatter(): ResponseFormatterInterface
     {
         return $this[self::RESPONSE_FORMATTER];
     }
-    
+
     /**
      * @return RouterInterface
      */
-    public function getRouter()
+    public function getRouter(): RouterInterface
     {
         return $this[self::ROUTER];
     }
-    
+
     /**
      * @return RoutesClassesInterface
      */
-    public function getRoutesClasses()
+    public function getRoutesClasses(): RoutesClassesInterface
     {
         return $this[self::ROUTES_CLASSES];
     }

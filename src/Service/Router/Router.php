@@ -21,13 +21,13 @@ use Psr\Container\ContainerInterface;
  */
 class Router extends \Slim\Router implements RouterInterface
 {
-    
+
     use ContainerTrait;
     /**
      * @var RouteMapInterface[]
      */
     private $routesMap = [];
-    
+
     /**
      * Router constructor.
      *
@@ -51,25 +51,26 @@ class Router extends \Slim\Router implements RouterInterface
             $this->routesMap[] = $routeMap;
         }
     }
-    
+
     /**
      * @param RouteInterface $resourceRoute
      *
      * @return RouteInterface
      */
-    public function addResourceRoute(RouteInterface $resourceRoute)
+    public function addResourceRoute(RouteInterface $resourceRoute
+    ): RouteInterface
     {
         $resourceRoute->setIdentifier('route' . $this->routeCounter++);
         // Add route
         $this->routes[$resourceRoute->getIdentifier()] = $resourceRoute;
-        
+
         return $resourceRoute;
     }
-    
+
     /**
      * @return RouteMapInterface[]
      */
-    public function getRoutesMap()
+    public function getRoutesMap(): array
     {
         return $this->routesMap;
     }

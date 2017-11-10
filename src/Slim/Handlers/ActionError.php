@@ -14,9 +14,9 @@ use Slim\Handlers\AbstractError;
 
 class ActionError extends AbstractError implements ActionErrorInterface
 {
-    
+
     use ApiProblemRendererTrait;
-    
+
     /**
      * @param \Exception             $exception
      * @param ServerRequestInterface $request
@@ -28,15 +28,15 @@ class ActionError extends AbstractError implements ActionErrorInterface
         \Exception $exception,
         ServerRequestInterface $request,
         ResponseInterface $response
-    ) {
-    
+    ): ResponseInterface {
+
         $this->writeToErrorLog($exception);
-    
+
         $status = $exception->getCode();
         if (!is_integer($status) || $status < 100 || $status > 599) {
             $status = 500;
         }
-    
+
         return $this->render(
             $request,
             $response,

@@ -14,9 +14,9 @@ use Psr\Http\Message\ServerRequestInterface;
 
 class EntityRequestError implements EntityRequestErrorInterface
 {
-    
+
     use ApiProblemRendererTrait;
-    
+
     /**
      * @param EntityRequestInterface $entityRequest
      * @param ServerRequestInterface $request
@@ -28,10 +28,10 @@ class EntityRequestError implements EntityRequestErrorInterface
         EntityRequestInterface $entityRequest,
         ServerRequestInterface $request,
         ResponseInterface $response
-    ) {
+    ): ResponseInterface {
         $model = $entityRequest->getTableMap()->getPhpName();
         $pk    = $entityRequest->getPrimaryKey();
-        
+
         return $this->render(
             $request,
             $response,
@@ -40,7 +40,7 @@ class EntityRequestError implements EntityRequestErrorInterface
             "{$model} #{$pk} not found"
         );
     }
-    
+
     /**
      * @param EntityRequestInterface $entityRequest
      * @param ServerRequestInterface $request
@@ -52,9 +52,9 @@ class EntityRequestError implements EntityRequestErrorInterface
         EntityRequestInterface $entityRequest,
         ServerRequestInterface $request,
         ResponseInterface $response
-    ) {
+    ): ResponseInterface {
         $model = $entityRequest->getTableMap()->getPhpName();
-        
+
         return $this->render(
             $request,
             $response,

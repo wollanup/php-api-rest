@@ -10,35 +10,35 @@ namespace Eukles\Entity\Middleware;
 
 use Eukles\Container\ContainerInterface;
 use Eukles\Container\ContainerTrait;
-use Eukles\Service\Router\RouteInterface;
+use Eukles\Entity\EntityFactoryConfig;
 use Psr\Http\Message\ResponseInterface;
 
 /**
  * Class EntityCreate
+ * @method ContainerInterface getContainer()
  *
  * @package Eukles\Entity\Middleware
  */
 class EntityCreate implements RouteEntityMiddlewareInterface
 {
-    
+
     use ContainerTrait;
     /**
-     * @var RouteInterface
+     * @var EntityFactoryConfig
      */
-    protected $route;
-    
+    protected $config;
+
     /**
      * EntityCreate constructor.
      *
-     * @param ContainerInterface $container
-     * @param RouteInterface     $route
+     * @param EntityFactoryConfig $config
      */
-    public function __construct(ContainerInterface $container, RouteInterface $route)
+    public function __construct(EntityFactoryConfig $config)
     {
-        $this->container = $container;
-        $this->route     = $route;
+        $this->container = $config->getContainer();
+        $this->config    = $config;
     }
-    
+
     /**
      * @param $request
      * @param $response
@@ -48,17 +48,14 @@ class EntityCreate implements RouteEntityMiddlewareInterface
      */
     public function __invoke($request, $response, $next): ResponseInterface
     {
-        $requestClass = $this->route->getRequestClass();
         /** @var ContainerInterface $this */
-        $response = $this->container->getEntityFactory()->create(
-            new $requestClass($this->container),
+        $response = $this->getContainer()->getEntityFactory()->create(
+            $this->config,
             $request,
             $response,
-            $next,
-            $this->route->getNameOfInjectedParam(),
-            $this->route->hasToUseRequest()
+            $next
         );
-        
+
         return $response;
     }
 }
