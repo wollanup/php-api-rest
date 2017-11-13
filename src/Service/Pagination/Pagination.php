@@ -10,7 +10,7 @@ namespace Eukles\Service\Pagination;
 
 class Pagination implements PaginationInterface
 {
-    
+
     /**
      * @var
      */
@@ -19,7 +19,7 @@ class Pagination implements PaginationInterface
      * @var int
      */
     protected $page = self::DEFAULT_PAGE;
-    
+
     /**
      * Pagination constructor.
      *
@@ -31,15 +31,15 @@ class Pagination implements PaginationInterface
         $this->setPage($page);
         $this->setLimit($limit);
     }
-    
+
     /**
      * @return int
      */
-    public function getLimit()
+    public function getLimit(): int
     {
         return $this->limit;
     }
-    
+
     /**
      * @param int $limit
      *
@@ -49,12 +49,12 @@ class Pagination implements PaginationInterface
     {
         if (!is_scalar($limit)) {
             $this->limit = self::DEFAULT_LIMIT;
-            
+
             return $this;
         } else {
             $limit = (int)$limit;
         }
-        
+
         if ($limit > self::MAX_LIMIT) {
             $this->limit = self::MAX_LIMIT;
         } elseif ($limit < 1) {
@@ -62,18 +62,18 @@ class Pagination implements PaginationInterface
         } else {
             $this->limit = $limit;
         }
-        
+
         return $this;
     }
-    
+
     /**
      * @return int
      */
-    public function getPage()
+    public function getPage(): int
     {
         return $this->page;
     }
-    
+
     /**
      * @param int $page
      *
@@ -83,18 +83,18 @@ class Pagination implements PaginationInterface
     {
         if (!is_scalar($page)) {
             $this->page = self::DEFAULT_PAGE;
-            
+
             return $this;
         } else {
             $page = (int)$page;
         }
-        
+
         if ($page < 1) {
             $this->page = 1;
         } else {
             $this->page = $page;
         }
-        
+
         return $this;
     }
 }

@@ -17,27 +17,20 @@ use Test\Eukles\Mock\Response;
 
 class ActionTest extends TestCase
 {
-    
+
     public function testConstruct()
     {
         $a = $this->getMockForAbstractClass(ActionAbstract::class, [], "", false);
         $this->assertTrue($a instanceof ActionInterface);
     }
-    
+
     public function testConstructWithContainer()
     {
         $c = new Container();
         $a = $this->getMockForAbstractClass(ActionAbstract::class, [$c]);
         $this->assertTrue($a instanceof ActionInterface);
     }
-    
-    public function testGetContainer()
-    {
-        /** @var ActionInterface $a */
-        $a = $this->getMockForAbstractClass(ActionAbstract::class, [], "", false);
-        $this->assertNull($a->getContainer());
-    }
-    
+
     public function testRequest()
     {
         /** @var ActionInterface $a */
@@ -46,7 +39,7 @@ class ActionTest extends TestCase
         $a->setRequest($r);
         $this->assertEquals($r, $a->getRequest());
     }
-    
+
     public function testResponse()
     {
         /** @var ActionInterface $a */

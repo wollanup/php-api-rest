@@ -2,21 +2,16 @@
 /**
  * Created by PhpStorm.
  * User: steve
- * Date: 04/04/17
- * Time: 10:52
+ * Date: 28/03/17
+ * Time: 15:10
  */
 
 namespace Eukles\Service\QueryModifier;
 
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 
-class QueryModifier implements QueryModifierInterface
+interface QueryModifierInterface
 {
-
-    /**
-     * @var ModelCriteria
-     */
-    protected $query;
 
     /**
      * Applies modifiers and merge query if one has been set
@@ -25,14 +20,7 @@ class QueryModifier implements QueryModifierInterface
      *
      * @return ModelCriteria
      */
-    public function apply(ModelCriteria $query)
-    {
-        if ($this->query) {
-            $query->mergeWith($this->query);
-        }
-
-        return $query;
-    }
+    public function apply(ModelCriteria $query);
 
     /**
      * This ModelCriteria will be merged with another one when apply is called
@@ -41,10 +29,5 @@ class QueryModifier implements QueryModifierInterface
      *
      * @return QueryModifierInterface
      */
-    public function setQuery(ModelCriteria $query): QueryModifierInterface
-    {
-        $this->query = $query;
-
-        return $this;
-    }
+    public function setQuery(ModelCriteria $query): QueryModifierInterface;
 }

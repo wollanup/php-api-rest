@@ -15,135 +15,133 @@ use Psr\Http\Message\ServerRequestInterface;
 
 class EntityFactory implements EntityFactoryInterface
 {
-    
+
     /**
      * Create a new instance of activeRecord and add it to Request attributes
      *
-     * @param EntityRequestInterface $entityRequest
+     * @param EntityFactoryConfig    $config
      * @param ServerRequestInterface $request
      * @param ResponseInterface      $response
      * @param callable               $next
-     * @param string                 $nameOfParameterToAdd
-     * @param bool                   $useRequestParameters
      *
      * @return ResponseInterface
      */
     public function create(
-        EntityRequestInterface $entityRequest,
+        EntityFactoryConfig $config,
         ServerRequestInterface $request,
         ResponseInterface $response,
-        callable $next,
-        $nameOfParameterToAdd = null,
-        $useRequestParameters = true
+        callable $next
+    ): ResponseInterface {
+        $entityRequest = $config->getEntityRequest();
 
-    ) {
         # make a new empty record
         $obj = $entityRequest->instantiateActiveRecord();
-    
+
         # Execute beforeCreate hook, which can alter record
         $entityRequest->beforeCreate($obj);
-    
+
         # Then, alter object with allowed properties
-        if ($useRequestParameters) {
-    
+        if ($config->isHydrateEntityFromRequest()) {
             $requestParams = $request->getQueryParams();
             $postParams    = $request->getParsedBody();
             if ($postParams) {
-                $requestParams = array_merge($requestParams, (array)$postParams);
+                $requestParams = array_merge($requestParams,
+                    (array)$postParams);
             }
-    
+
             /** @noinspection PhpUndefinedMethodInspection */
-            $obj->fromArray($entityRequest->getAllowedDataFromRequest($requestParams, $request->getMethod()));
+            $obj->fromArray($entityRequest->getAllowedDataFromRequest($requestParams,
+                $request->getMethod()));
         }
-    
+
         # Execute afterCreate hook, which can alter record
         $entityRequest->afterCreate($obj);
-    
-        # Finally, build name of parameter to inject in action method, will be used later
-        if ($nameOfParameterToAdd === null) {
-            $nameOfParameterToAdd = $entityRequest->getNameOfParameterToAdd();
-        }
+
         /** @var $request ServerRequestInterface */
-        $newRequest = $request->withAttribute($nameOfParameterToAdd, $obj);
+        $newRequest = $request->withAttribute(
+            $config->getParameterToInjectInto(), $obj
+        );
         $response   = $next($newRequest, $response);
-    
+
         return $response;
     }
-    
+
     /**
      * Fetch an existing instance of activeRecord and add it to Request attributes
      *
-     * @param EntityRequestInterface $entityRequest
+     * @param EntityFactoryConfig    $config
      * @param ServerRequestInterface $request
      * @param ResponseInterface      $response
      * @param callable               $next
-     * @param string                 $nameOfParameterToAdd
-     * @param bool                   $useRequestParameters
      *
      * @return ResponseInterface
      */
     public function fetch(
-        EntityRequestInterface $entityRequest,
+        EntityFactoryConfig $config,
         ServerRequestInterface $request,
         ResponseInterface $response,
-        callable $next,
-        $nameOfParameterToAdd = null,
-        $useRequestParameters = true
-    ) {
-    
+        callable $next
+    ): ResponseInterface {
+        $entityRequest = $config->getEntityRequest();
+
         # First, we try to determine PK in request path (most common case)
-        if (isset($request->getAttribute('routeInfo')[2]['id'])) {
-            $entityRequest->setPrimaryKey($request->getAttribute('routeInfo')[2]['id']);
+        if (isset($request->getAttribute('routeInfo')[2][$config->getRequestParameterName()])) {
+            $config->getEntityRequest()->setPrimaryKey(
+                $request->getAttribute('routeInfo')[2][$config->getRequestParameterName()]
+            );
         }
-    
+
         # Next, we create the query (ModelCriteria), based on Action class (which can alter the query)
         $query = $this->getQueryFromActiveRecordRequest($entityRequest);
-    
+
         # Execute beforeFetch hook, which can enforce primary key
         $query = $entityRequest->beforeFetch($query);
-    
+
         # Now get the primary key in its final form
         $pk = $entityRequest->getPrimaryKey();
         if (null === $pk) {
-            $handler = $entityRequest->getContainer()->getEntityRequestErrorHandler();
-    
-            return $handler->primaryKeyNotFound($entityRequest, $request, $response);
+            $handler = $entityRequest->getContainer()
+                ->getEntityRequestErrorHandler();
+
+            return $handler->primaryKeyNotFound($entityRequest, $request,
+                $response);
         }
-    
+
         # Then, fetch object
         $obj = $query->findPk($pk);
-    
+
         if ($obj === null) {
-            $handler = $entityRequest->getContainer()->getEntityRequestErrorHandler();
-    
-            return $handler->entityNotFound($entityRequest, $request, $response);
+            $handler = $entityRequest->getContainer()
+                ->getEntityRequestErrorHandler();
+
+            return $handler->entityNotFound($entityRequest, $request,
+                $response);
         }
-    
+
         # Get request params
-        if ($useRequestParameters) {
+        if ($config->isHydrateEntityFromRequest()) {
             $params     = $request->getQueryParams();
             $postParams = $request->getParsedBody();
             if ($postParams) {
                 $params = array_merge($params, (array)$postParams);
             }
-        
+
             # Then, alter object with allowed properties
-            $obj->fromArray($entityRequest->getAllowedDataFromRequest($params, $request->getMethod()));
+            $obj->fromArray($entityRequest->getAllowedDataFromRequest($params,
+                $request->getMethod()));
         }
-    
+
         # Then, execute afterFetch hook, which can alter the object
         $entityRequest->afterFetch($obj);
-    
-        # Finally, build name of parameter to inject in action method, will be used later
-        if ($nameOfParameterToAdd === null) {
-            $nameOfParameterToAdd = $entityRequest->getNameOfParameterToAdd();
-        }
-        $newRequest = $request->withAttribute($nameOfParameterToAdd, $obj);
+
+        $newRequest = $request->withAttribute(
+            $config->getParameterToInjectInto(), $obj
+        );
         $response   = $next($newRequest, $response);
-    
+
         return $response;
     }
-    
+
     /**
      * Fetch an existing collection of activeRecords and add it to Request attributes
      *
@@ -161,8 +159,8 @@ class EntityFactory implements EntityFactoryInterface
         ResponseInterface $response,
         callable $next,
         $nameOfParameterToAdd = null
-    ) {
-        
+    ): ResponseInterface {
+
         $pks = [];
         if ($request->getMethod() === 'GET') {
             # GET : Try to find PKs in query
@@ -177,35 +175,40 @@ class EntityFactory implements EntityFactoryInterface
                 $pks    = $finder->find($request->getParsedBody());
             }
         }
-        
+
         # Next, we create the query (ModelCriteria), based on Action class (which can alter the query)
         $query = $this->getQueryFromActiveRecordRequest($entityRequest);
-        
+
         if (empty($pks)) {
-            $handler = $entityRequest->getContainer()->getEntityRequestErrorHandler();
-            
-            return $handler->primaryKeyNotFound($entityRequest, $request, $response);
+            $handler = $entityRequest->getContainer()
+                ->getEntityRequestErrorHandler();
+
+            return $handler->primaryKeyNotFound($entityRequest, $request,
+                $response);
         }
-        
+
         # Then, fetch object
         $col = $query->findPks($pks);
-        
+
         if ($col === null) {
-            $handler = $entityRequest->getContainer()->getEntityRequestErrorHandler();
-            
-            return $handler->entityNotFound($entityRequest, $request, $response);
+            $handler = $entityRequest->getContainer()
+                ->getEntityRequestErrorHandler();
+
+            return $handler->entityNotFound($entityRequest, $request,
+                $response);
         }
-        
+
         # Finally, build name of parameter to inject in action method, will be used later
         if ($nameOfParameterToAdd === null) {
-            $nameOfParameterToAdd = $entityRequest->getNameOfParameterToAdd(true);
+            $nameOfParameterToAdd
+                = $entityRequest->getNameOfParameterToAdd(true);
         }
         $newRequest = $request->withAttribute($nameOfParameterToAdd, $col);
         $response   = $next($newRequest, $response);
-        
+
         return $response;
     }
-    
+
     /**
      * Create the query (ModelCriteria), based on Action class (which can alter the query)
      *
@@ -213,12 +216,13 @@ class EntityFactory implements EntityFactoryInterface
      *
      * @return \Propel\Runtime\ActiveQuery\ModelCriteria
      */
-    private function getQueryFromActiveRecordRequest(EntityRequestInterface $activeRecordRequest)
-    {
-        $actionClassName = $activeRecordRequest->getActionClassName();
+    private function getQueryFromActiveRecordRequest(
+        EntityRequestInterface $activeRecordRequest
+    ) {
+        $actionClass = $activeRecordRequest->getActionClassName();
         /** @var ActionInterface $action */
-        $action = $actionClassName::create($activeRecordRequest->getContainer());
-    
+        $action = $actionClass::create($activeRecordRequest->getContainer());
+
         return $action->createQuery();
     }
 }

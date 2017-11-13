@@ -2,6 +2,7 @@
 
 namespace Eukles\Action;
 
+use Eukles\Container\ContainerTrait;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -14,11 +15,8 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 abstract class ActionAbstract implements ActionInterface
 {
-    
-    /**
-     * @var ContainerInterface
-     */
-    protected $container;
+
+    use ContainerTrait;
     /**
      * @var ServerRequestInterface
      */
@@ -31,7 +29,7 @@ abstract class ActionAbstract implements ActionInterface
      * @var ResponseInterface
      */
     protected $response;
-    
+
     /**
      * SlimControllerInterface constructor.
      *
@@ -47,52 +45,44 @@ abstract class ActionAbstract implements ActionInterface
             $this->response = $c['response'];
         }
     }
-    
-    /**
-     * @return ContainerInterface
-     */
-    public function getContainer()
-    {
-        return $this->container;
-    }
-    
+
     /**
      * @return ServerRequestInterface
      */
-    public function getRequest()
+    public function getRequest(): ServerRequestInterface
     {
         return $this->request;
     }
-    
+
     /**
      * @param ServerRequestInterface $serverRequest
      *
      * @return ActionInterface
      */
-    public function setRequest(ServerRequestInterface $serverRequest)
-    {
+    public function setRequest(ServerRequestInterface $serverRequest
+    ): ActionInterface {
         $this->request = $serverRequest;
-        
+
         return $this;
     }
-    
+
     /**
      * @return ResponseInterface
      */
-    public function getResponse()
+    public function getResponse(): ResponseInterface
     {
         return $this->response;
     }
-    
+
     /**
      * @param ResponseInterface $response
      *
      * @return ActionInterface
      */
-    public function setResponse(ResponseInterface $response)
+    public function setResponse(ResponseInterface $response): ActionInterface
     {
         $this->response = $response;
-        
+
         return $this;
     }
 }
