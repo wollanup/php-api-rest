@@ -173,13 +173,6 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
     public function setPackage(string $package): RouteInterface;
 
     /**
-     * @param string $pattern
-     *
-     * @return RouteInterface
-     */
-    public function setPattern(string $pattern): RouteInterface;
-
-    /**
      * @param string $requestClass
      *
      * @return RouteInterface
