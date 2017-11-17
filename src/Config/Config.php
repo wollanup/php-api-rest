@@ -11,9 +11,9 @@ namespace Eukles\Config;
 use Adbar\Dot;
 use Eukles\Env\Env;
 
-class Config extends Dot
+class Config extends Dot implements ConfigInterface
 {
-    
+
     /**
      * Export config as array php code
      *
@@ -25,7 +25,7 @@ class Config extends Dot
     {
         return var_export($this->all(), true);
     }
-    
+
     /**
      * @param string|array $environment Can be 'production' or ['dev', 'test']
      *
@@ -35,7 +35,7 @@ class Config extends Dot
     {
         return in_array($this->get('app.environment'), (array)$environment);
     }
-    
+
     /**
      * @return bool
      */
@@ -43,7 +43,7 @@ class Config extends Dot
     {
         return false === $this->isProduction();
     }
-    
+
     /**
      * @return bool
      */

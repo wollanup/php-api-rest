@@ -21,13 +21,13 @@ use Slim\Interfaces\InvocationStrategyInterface;
  */
 class ActionStrategy implements InvocationStrategyInterface
 {
-    
+
     use ApiProblemRendererTrait;
     /**
      * @var ContainerInterface
      */
     protected $container;
-    
+
     /**
      * ActionStrategy constructor.
      *
@@ -37,7 +37,7 @@ class ActionStrategy implements InvocationStrategyInterface
     {
         $this->container = $container;
     }
-    
+
     /**
      * Invoke a route callable with request, response and all route parameters
      * as individual arguments.
@@ -55,10 +55,10 @@ class ActionStrategy implements InvocationStrategyInterface
         ResponseInterface $response,
         array $routeArguments
     ) {
-        
+
         return $this->callHandler($callable, $request, $response, $routeArguments);
     }
-    
+
     /**
      * Call a method in an Action class
      *
@@ -77,16 +77,16 @@ class ActionStrategy implements InvocationStrategyInterface
         ResponseInterface $response,
         array $routeArguments
     ) {
-        
+
         try {
             return call_user_func_array($callable, $this->buildParams($callable, $request, $routeArguments));
         } catch (\Exception $e) {
             $handler = $this->container->getActionErrorHandler();
-    
+
             return $handler($e, $request, $response);
         }
     }
-    
+
     /**
      * Build list of parameters needed by Action::method
      *
@@ -101,27 +101,27 @@ class ActionStrategy implements InvocationStrategyInterface
         ServerRequestInterface $request,
         $routeArguments
     ) {
-        
+
         if (is_array($callable) === false) {
             return [];
         }
-        
+
         $r            = new \ReflectionClass($callable[0]);
         $m            = $r->getMethod($callable[1]);
         $paramsMethod = $m->getParameters();
-        
+
         if (empty($paramsMethod)) {
             return [];
         }
-    
+
         $requestParams = $request->getQueryParams();
         $postParams    = $request->getParsedBody();
         if ($postParams) {
             $requestParams = array_merge($requestParams, (array)$postParams);
         }
-    
+
         $buildParams   = [];
-        
+
         /** @var \ReflectionParameter[] $params */
         foreach ($paramsMethod as $param) {
             $name  = $param->getName();
@@ -160,37 +160,10 @@ class ActionStrategy implements InvocationStrategyInterface
                 $buildParams[] = $paramValue;
             }
         }
-        
+
         return $buildParams;
     }
-    
-    /**
-     * Build a string response
-     *
-     * @param mixed                               $result
-     * @param \Psr\Http\Message\ResponseInterface $response
-     *
-     * @return ResponseInterface
-     * @throws \Exception
-     */
-    private function buildResponse($result, ResponseInterface $response)
-    {
-        
-        $responseBuilder   = $this->container->getResponseBuilder();
-        $responseFormatter = $this->container->getResponseFormatter();
-        
-        if (!is_callable($responseBuilder)) {
-            throw new ResponseBuilderException('ResponseBuilder must be callable or implements ResponseBuilderInterface');
-        }
-        if (!is_callable($responseFormatter)) {
-            throw new ResponseFormatterException('ResponseFormatter must be callable or implements ResponseFormatterInterface');
-        }
-        
-        $result = $responseBuilder($result);
-        
-        return $responseFormatter($response, $result);
-    }
-    
+
     /**
      * Call action with built params
      *
@@ -216,21 +189,21 @@ class ActionStrategy implements InvocationStrategyInterface
         } else {
             # Action is a method of an Action class
             if (is_array($callable) && $callable[0] instanceof Action\ActionInterface) {
-                $callable[0]->setRequest($request);
                 $callable[0]->setResponse($response);
-                // TODO pagination From Request
             }
-            
+
             # Call Action method
             $result   = $this->callAction($callable, $request, $response, $routeArguments);
             $response = $callable[0]->getResponse();
         }
+
+        # Store result in container to be used in route middleware
+        $this->container->setResult($result);
+
         if (($result instanceof ResponseInterface)) {
             $response = $result;
-        } else {
-            $response = $this->buildResponse($result, $response);
         }
-        
+
         return $response;
     }
 }
