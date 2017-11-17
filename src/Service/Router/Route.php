@@ -38,7 +38,15 @@ class Route extends \Slim\Route implements RouteInterface
     /**
      * @var bool
      */
+    protected $createEntity = false;
+    /**
+     * @var bool
+     */
     protected $deprecated = false;
+    /**
+     * @var bool
+     */
+    protected $fetchEntity = false;
     /**
      * @deprecated
      * @var bool
@@ -154,6 +162,8 @@ class Route extends \Slim\Route implements RouteInterface
         string $injectInActionParameterName = null,
         bool $hydrateEntityFromRequest = true
     ) {
+        $this->createEntity = true;
+
         $config = $this->buildEntityFactoryConfig(
             $entityRequestClass,
             null,
@@ -206,6 +216,8 @@ class Route extends \Slim\Route implements RouteInterface
         string $injectInActionParameterName = null,
         bool $hydrateEntityFromRequest = true
     ) {
+        $this->fetchEntity = true;
+
         $config = $this->buildEntityFactoryConfig(
             $entityRequestClass,
             $requestParameter,
@@ -279,6 +291,11 @@ class Route extends \Slim\Route implements RouteInterface
         return sprintf('%s:%s', $this->getResource(), $this->getActionMethod());
     }
 
+    public function getNameOfInjectedParam()
+    {
+        return $this->nameOfInjectedParam;
+    }
+
     /**
      * @param string $nameOfInjectedParam
      *
@@ -286,8 +303,7 @@ class Route extends \Slim\Route implements RouteInterface
      * @return RouteInterface
      */
     public function setNameOfInjectedParam(string $nameOfInjectedParam
-    ): RouteInterface
-    {
+    ): RouteInterface {
         $this->nameOfInjectedParam = $nameOfInjectedParam;
 
         return $this;
@@ -401,9 +417,25 @@ class Route extends \Slim\Route implements RouteInterface
     /**
      * @return bool
      */
+    public function isCreateEntity(): bool
+    {
+        return $this->createEntity;
+    }
+
+    /**
+     * @return bool
+     */
     public function isDeprecated(): bool
     {
         return $this->deprecated;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFetchEntity(): bool
+    {
+        return $this->fetchEntity;
     }
 
     /**
@@ -506,10 +538,5 @@ class Route extends \Slim\Route implements RouteInterface
         }
 
         return $value;
-    }
-
-    public function getNameOfInjectedParam()
-    {
-        return $this->nameOfInjectedParam;
     }
 }

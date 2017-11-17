@@ -203,4 +203,19 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
      * @return RouteInterface
      */
     public function useRequest(bool $bool): RouteInterface;
+
+    /**
+     * Tells if route will create an entity
+     *
+     * @return bool
+     */
+    public function isCreateEntity(): bool;
+
+    /**
+     * Tells if route will fetch an entity
+     *
+     * @return bool
+     */
+    public function isFetchEntity(): bool;
+
 }
