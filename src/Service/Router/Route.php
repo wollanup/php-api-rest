@@ -34,7 +34,7 @@ class Route extends \Slim\Route implements RouteInterface
     /**
      * @var
      */
-    protected $collectionFromPks;
+    protected $collectionFromPks = false;
     /**
      * @var bool
      */
