@@ -6,7 +6,6 @@ use Eukles\Service\QueryModifier\QueryModifierInterface;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Interface ActionInterface
@@ -36,22 +35,9 @@ interface ActionInterface
     public function getContainer(): ContainerInterface;
 
     /**
-     * @return ServerRequestInterface
-     */
-    public function getRequest(): ServerRequestInterface;
-
-    /**
      * @return ResponseInterface
      */
     public function getResponse(): ResponseInterface;
-
-    /**
-     * @param ServerRequestInterface $serverRequest
-     *
-     * @return ActionInterface
-     */
-    public function setRequest(ServerRequestInterface $serverRequest
-    ): ActionInterface;
 
     /**
      * @param ResponseInterface $response

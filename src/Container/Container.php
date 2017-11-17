@@ -207,6 +207,24 @@ class Container extends SlimContainer implements ContainerInterface
     }
 
     /**
+     * @return ResponseInterface
+     */
+    public function getResponse(): ResponseInterface
+    {
+        return $this['response'];
+    }
+
+    /**
+     * Result is populated in ActionStrategy and becomes available in middlewares post-app
+     *
+     * @return mixed
+     */
+    public function getResult()
+    {
+        return $this[self::RESULT];
+    }
+
+    /**
      * @return RouterInterface
      */
     public function getRouter(): RouterInterface
@@ -220,5 +238,16 @@ class Container extends SlimContainer implements ContainerInterface
     public function getRoutesClasses(): RoutesClassesInterface
     {
         return $this[self::ROUTES_CLASSES];
+    }
+
+    /**
+     * @param $result
+     *
+     * @return void
+     */
+    public function setResult($result)
+    {
+        unset($this[self::RESULT]);
+        $this[self::RESULT] = $result;
     }
 }

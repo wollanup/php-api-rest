@@ -18,6 +18,7 @@ use Eukles\Service\Router\RouterInterface;
 use Eukles\Service\RoutesClasses\RoutesClassesInterface;
 use Eukles\Slim\Handlers\ActionErrorInterface;
 use Eukles\Slim\Handlers\EntityRequestErrorInterface;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -39,6 +40,7 @@ interface ContainerInterface extends \Psr\Container\ContainerInterface
     const ROUTES_CLASSES = 'routesClasses';
     const ENTITY_REQUEST_ERROR_HANDLER = 'entityRequestErrorHandler';
     const ACTION_ERROR_HANDLER = 'actionErrorHandler';
+    const RESULT = 'result';
 
     /**
      * @return ActionErrorInterface
@@ -76,6 +78,11 @@ interface ContainerInterface extends \Psr\Container\ContainerInterface
     public function getRequestQueryModifier(): RequestQueryModifierInterface;
 
     /**
+     * @return ResponseInterface
+     */
+    public function getResponse(): ResponseInterface;
+
+    /**
      * @return ResponseBuilderInterface
      */
     public function getResponseBuilder(): ResponseBuilderInterface;
@@ -84,6 +91,20 @@ interface ContainerInterface extends \Psr\Container\ContainerInterface
      * @return ResponseFormatterInterface
      */
     public function getResponseFormatter(): ResponseFormatterInterface;
+
+    /**
+     * Result is populated in ActionStrategy and becomes available in middlewares post-app
+     *
+     * @return mixed
+     */
+    public function getResult();
+
+    /**
+     * @param $result
+     *
+     * @return void
+     */
+    public function setResult($result);
 
     /**
      * @return RouterInterface

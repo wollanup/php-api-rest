@@ -6,7 +6,6 @@ use Eukles\Container\ContainerTrait;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Class ActionAbstract
@@ -17,10 +16,6 @@ abstract class ActionAbstract implements ActionInterface
 {
 
     use ContainerTrait;
-    /**
-     * @var ServerRequestInterface
-     */
-    protected $request;
     /**
      * @var ModelCriteria null
      */
@@ -44,26 +39,6 @@ abstract class ActionAbstract implements ActionInterface
         if ($c->has('response')) {
             $this->response = $c['response'];
         }
-    }
-
-    /**
-     * @return ServerRequestInterface
-     */
-    public function getRequest(): ServerRequestInterface
-    {
-        return $this->request;
-    }
-
-    /**
-     * @param ServerRequestInterface $serverRequest
-     *
-     * @return ActionInterface
-     */
-    public function setRequest(ServerRequestInterface $serverRequest
-    ): ActionInterface {
-        $this->request = $serverRequest;
-
-        return $this;
     }
 
     /**
