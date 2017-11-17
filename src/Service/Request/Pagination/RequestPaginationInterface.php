@@ -6,8 +6,9 @@
  * Time: 17:06
  */
 
-namespace Eukles\Service\Pagination;
+namespace Eukles\Service\Request\Pagination;
 
+use Eukles\Service\Pagination\PaginationInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 interface RequestPaginationInterface extends PaginationInterface
