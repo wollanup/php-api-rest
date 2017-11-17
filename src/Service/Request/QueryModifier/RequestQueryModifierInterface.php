@@ -6,8 +6,9 @@
  * Time: 11:07
  */
 
-namespace Eukles\Service\QueryModifier;
+namespace Eukles\Service\Request\QueryModifier;
 
+use Eukles\Service\QueryModifier\QueryModifierInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 interface RequestQueryModifierInterface extends QueryModifierInterface
