@@ -84,8 +84,12 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
     {
         $route = new Route($this, $method);
         $route->setContainer($this->container);
-        $route->setActionClass($this->actionClass);
-        $route->setRequestClass($this->requestClass);
+        if (null !== $this->actionClass) {
+            $route->setActionClass($this->actionClass);
+        }
+        if (null !== $this->requestClass) {
+            $route->setRequestClass($this->requestClass);
+        }
         $route->setPackage($this->getPackage());
         $prefixes = [$this->resourceName];
         if ($this->isSubResourceOfPackage()) {
@@ -143,7 +147,7 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
      */
     public function getPackage(): string
     {
-        return ($this->isSubResourceOfPackage()) ? $this->packageName : $this->resourceName;
+        return (string)($this->isSubResourceOfPackage()) ? $this->packageName : $this->resourceName;
     }
 
     /**
