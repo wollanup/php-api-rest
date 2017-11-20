@@ -75,6 +75,14 @@ class EntityFactoryConfig
     }
 
     /**
+     * @return bool
+     */
+    public function hasEntityRequest(): bool
+    {
+        return null !== $this->entityRequest;
+    }
+
+    /**
      * @param string $entityRequestClassName
      *
      * @return EntityFactoryConfig

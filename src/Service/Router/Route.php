@@ -92,6 +92,7 @@ class Route extends \Slim\Route implements RouteInterface
      */
     private $package;
     /**
+     * @deprecated will be remove when fetchCollection will be implemented
      * @var string
      */
     private $requestClass;
@@ -358,6 +359,7 @@ class Route extends \Slim\Route implements RouteInterface
     }
 
     /**
+     * @deprecated will be remove when fetchCollection will be implemented
      * @return string
      */
     public function getRequestClass(): string
@@ -513,6 +515,11 @@ class Route extends \Slim\Route implements RouteInterface
      */
     public function makeInstance(bool $forceFetch = false): RouteInterface
     {
+        if ($forceFetch || $this->getVerb() !== 'POST') {
+            $this->fetchEntity(EntityFactoryConfig::create($this->container));
+        } else {
+            $this->createEntity(EntityFactoryConfig::create($this->container));
+        }
         $this->instanceFromPk     = true;
         $this->instanceForceFetch = $forceFetch;
 
@@ -593,6 +600,10 @@ class Route extends \Slim\Route implements RouteInterface
     {
         # TODO Legacy to remove
         $config->setHydrateEntityFromRequest($this->useRequest);
+
+        if (!($config->hasEntityRequest())) {
+            $config->setEntityRequest($this->requestClass);
+        }
 
         # Make sure config is clean
         $config->validate();

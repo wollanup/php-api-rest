@@ -71,10 +71,7 @@ interface EntityRequestInterface
      *
      * @return array
      */
-    public function getAllowedDataFromRequest(
-        array $requestParams,
-        $httpMethod
-    );
+    public function getAllowedDataFromRequest(array $requestParams, $httpMethod);
 
     /**
      * @return ContainerInterface

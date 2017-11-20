@@ -133,7 +133,7 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
     public function getPackage();
 
     /**
-     *
+     * @deprecated will be remove when fetchCollection will be implemented
      * @return string|EntityRequestInterface
      */
     public function getRequestClass(): string;
@@ -254,6 +254,7 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
     /**
      * @param string $requestClass
      *
+     * @deprecated will be remove when fetchCollection will be implemented
      * @return RouteInterface
      */
     public function setRequestClass(string $requestClass): RouteInterface;
