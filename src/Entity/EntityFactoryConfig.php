@@ -14,7 +14,7 @@ use Eukles\Container\ContainerTrait;
 class EntityFactoryConfig
 {
     use ContainerTrait;
-    const LOCATION_PATTERN = '\{(\w+)\}';
+    const LOCATION_PATTERN = '#\{(\w+)\}#';
     /**
      * Entity Request class used to instantiate and hydrate Entity
      *
