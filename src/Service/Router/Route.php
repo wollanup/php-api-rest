@@ -379,6 +379,7 @@ class Route extends \Slim\Route implements RouteInterface
     /**
      * @param string $requestClass
      *
+     * @deprecated
      * @return RouteInterface
      */
     public function setRequestClass(string $requestClass): RouteInterface

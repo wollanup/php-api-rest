@@ -204,6 +204,10 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
     /**
      * @param bool $forceFetch
      *
+     * @deprecated
+     * @see Route::fetchEntity()
+     * @see Route::createEntity()
+
      * @return RouteInterface
      */
     public function makeInstance(bool $forceFetch = false): RouteInterface;
@@ -239,6 +243,7 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
     /**
      * @param string $nameOfInjectedParam
      *
+     * @deprecated
      * @return RouteInterface
      */
     public function setNameOfInjectedParam(string $nameOfInjectedParam
