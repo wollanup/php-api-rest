@@ -63,7 +63,12 @@ class EntityFactory implements EntityFactoryInterface
         $response = $next($newRequest, $response);
 
         if ($config->hasSuccessLocationHeader() && $response->isSuccessful()) {
-            $response = $response->withStatus($config->getSuccessLocationHeader($obj));
+            $uri      = $request->getUri();
+            $location = $uri->getScheme() . '://';
+            $location .= $uri->getHost();
+            $location .= $uri->getPort() ? ':' . $uri->getPort() : "";
+            $location .= $config->getSuccessLocationHeader($obj);
+            $response = $response->withHeader('Location', $location);
         }
 
         return $response;
