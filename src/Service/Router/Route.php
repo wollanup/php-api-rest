@@ -185,13 +185,17 @@ class Route extends \Slim\Route implements RouteInterface
      */
     public function createEntity(EntityFactoryConfig $config): RouteInterface
     {
+        $config = $this->legacyCompatEntityFactoryConfig($config);
 
         # Auto determine name of parameter to add
         if (!$config->getParameterToInjectInto()) {
             $config->setParameterToInjectInto($config->getEntityRequest()->getNameOfParameterToAdd(false));
         }
 
-        $config = $this->validateEntityFactoryConfig($config);
+        $config = $this->legacyCompatEntityFactoryConfig($config);
+
+        # Make sure config is clean
+        $config->validate();
 
         $this->creates[] = [$config->getParameterToInjectInto() => $config];
 
@@ -216,12 +220,17 @@ class Route extends \Slim\Route implements RouteInterface
      */
     public function fetchEntity(EntityFactoryConfig $config): RouteInterface
     {
+        $config = $this->legacyCompatEntityFactoryConfig($config);
+
         # Auto determine name of parameter to add
         if (!$config->getParameterToInjectInto()) {
             $config->setParameterToInjectInto($config->getEntityRequest()->getNameOfParameterToAdd(false));
         }
 
-        $config = $this->validateEntityFactoryConfig($config);
+        # Make sure config is clean
+        $config->validate();
+
+        $this->fetches[] = [$config->getParameterToInjectInto() => $config];
 
         return $this->add(new EntityFetch($config));
     }
@@ -596,7 +605,7 @@ class Route extends \Slim\Route implements RouteInterface
      * @return EntityFactoryConfig
      * @throws RouteException
      */
-    private function validateEntityFactoryConfig(EntityFactoryConfig $config): EntityFactoryConfig
+    private function legacyCompatEntityFactoryConfig(EntityFactoryConfig $config): EntityFactoryConfig
     {
         # TODO Legacy to remove
         $config->setHydrateEntityFromRequest($this->useRequest);
@@ -604,9 +613,6 @@ class Route extends \Slim\Route implements RouteInterface
         if (!($config->hasEntityRequest())) {
             $config->setEntityRequest($this->requestClass);
         }
-
-        # Make sure config is clean
-        $config->validate();
 
         return $config;
     }
