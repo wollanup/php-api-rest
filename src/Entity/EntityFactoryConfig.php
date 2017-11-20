@@ -146,7 +146,7 @@ class EntityFactoryConfig
             if (isset($matches[1])) {
                 $getter = 'get' . ucfirst($matches[1]);
                 if (method_exists($obj, $getter)) {
-                    $value = call_user_func($obj, $getter);
+                    $value = call_user_func([$obj, $getter]);
                 } else {
                     throw new \RuntimeException('Getter method not found in object');
                 }
