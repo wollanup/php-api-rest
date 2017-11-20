@@ -165,6 +165,33 @@ class ActionStrategy implements InvocationStrategyInterface
     }
 
     /**
+     * Build a string response
+     *
+     * @param mixed                               $result
+     * @param \Psr\Http\Message\ResponseInterface $response
+     *
+     * @return ResponseInterface
+     * @throws \Exception
+     */
+    private function buildResponse($result, ResponseInterface $response)
+    {
+
+        $responseBuilder   = $this->container->getResponseBuilder();
+        $responseFormatter = $this->container->getResponseFormatter();
+
+        if (!is_callable($responseBuilder)) {
+            throw new ResponseBuilderException('ResponseBuilder must be callable or implements ResponseBuilderInterface');
+        }
+        if (!is_callable($responseFormatter)) {
+            throw new ResponseFormatterException('ResponseFormatter must be callable or implements ResponseFormatterInterface');
+        }
+
+        $result = $responseBuilder($result);
+
+        return $responseFormatter($response, $result);
+    }
+
+    /**
      * Call action with built params
      *
      * @param callable               $callable
@@ -194,14 +221,15 @@ class ActionStrategy implements InvocationStrategyInterface
 
             # Call Action method
             $result   = $this->callAction($callable, $request, $response, $routeArguments);
-            $response = $callable[0]->getResponse();
+            /** @var Action\ActionInterface $action */
+            $action   = $callable[0];
+            $response = $action->getResponse();
         }
-
-        # Store result in container to be used in route middleware
-        $this->container->setResult($result);
 
         if (($result instanceof ResponseInterface)) {
             $response = $result;
+        } else {
+            $response = $this->buildResponse($result, $response);
         }
 
         return $response;

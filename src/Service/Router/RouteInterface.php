@@ -8,6 +8,7 @@
 
 namespace Eukles\Service\Router;
 
+use Eukles\Entity\EntityFactoryConfig;
 use Eukles\Entity\EntityRequestInterface;
 use Eukles\Service\Router\Exception\RouteEmptyValueException;
 use Psr\Container\ContainerInterface;
@@ -30,6 +31,18 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
     public function addRole($role): RouteInterface;
 
     /**
+     * Add a status which may be sent by route
+     *
+     * Can be used to an api documentation to list all errors
+     *
+     * @param int    $status      HTTP status code
+     * @param string $description Description, may be used in api documentation
+     *
+     * @return RouteInterface
+     */
+    public function addStatus(int $status, string $description = "");
+
+    /**
      * @param RouterInterface $router
      *
      * @return mixed
@@ -37,11 +50,29 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
     public function bindToRouter(RouterInterface $router);
 
     /**
+     * Route will create an entity based on given EntityFactoryConfig object
+     *
+     * @param EntityFactoryConfig $config
+     *
+     * @return RouteInterface
+     */
+    public function createEntity(EntityFactoryConfig $config): RouteInterface;
+
+    /**
      * Mark route as deprecated (won't be documented)
      *
      * @return RouteInterface
      */
     public function deprecated(): RouteInterface;
+
+    /**
+     * Route will fetch an entity based on given EntityFactoryConfig object
+     *
+     * @param EntityFactoryConfig $config
+     *
+     * @return RouteInterface
+     */
+    public function fetchEntity(EntityFactoryConfig $config): RouteInterface;
 
     /**
      * @return string
@@ -61,6 +92,30 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
      * @return callable|string
      */
     public function getCallable();
+
+    /**
+     * @param string $paramName
+     *
+     * @return EntityFactoryConfig
+     */
+    public function getCreate(string $paramName): EntityFactoryConfig;
+
+    /**
+     * @return array
+     */
+    public function getCreates(): array;
+
+    /**
+     * @param string $paramName
+     *
+     * @return EntityFactoryConfig
+     */
+    public function getFetch(string $paramName): EntityFactoryConfig;
+
+    /**
+     * @return array
+     */
+    public function getFetches(): array;
 
     /**
      * @return string
@@ -99,6 +154,30 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
      * @throws RouteEmptyValueException
      */
     public function getVerb(): string;
+
+    /**
+     * @param string $paramName
+     *
+     * @return bool
+     */
+    public function hasCreate(string $paramName): bool;
+
+    /**
+     * @return bool
+     */
+    public function hasCreates(): bool;
+
+    /**
+     * @param string $paramName
+     *
+     * @return bool
+     */
+    public function hasFetch(string $paramName): bool;
+
+    /**
+     * @return bool
+     */
+    public function hasFetches(): bool;
 
     /**
      * @return bool
@@ -187,6 +266,17 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
     public function setRoles(array $roles): RouteInterface;
 
     /**
+     * Set status code in case of success response
+     *
+     * @param int    $status      HTTP status code
+     * @param string $description Description, may be used in api documentation
+     *
+     * @return RouteInterface
+     *
+     */
+    public function setSuccessStatus(int $status, string $description = "");
+
+    /**
      * @param string $verb
      *
      * @return RouteInterface
@@ -203,19 +293,4 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
      * @return RouteInterface
      */
     public function useRequest(bool $bool): RouteInterface;
-
-    /**
-     * Tells if route will create an entity
-     *
-     * @return bool
-     */
-    public function isCreateEntity(): bool;
-
-    /**
-     * Tells if route will fetch an entity
-     *
-     * @return bool
-     */
-    public function isFetchEntity(): bool;
-
 }

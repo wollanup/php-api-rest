@@ -13,8 +13,8 @@ use Eukles\Container\ContainerTrait;
 
 class EntityFactoryConfig
 {
-
     use ContainerTrait;
+    const LOCATION_PATTERN = '\{(\w+)\}';
     /**
      * Entity Request class used to instantiate and hydrate Entity
      *
@@ -39,6 +39,10 @@ class EntityFactoryConfig
      * @var string
      */
     protected $requestParameterName = "id";
+    /**
+     * @var string
+     */
+    protected $successLocationHeader = "";
 
     /**
      * EntityFactoryConfig constructor.
@@ -51,6 +55,18 @@ class EntityFactoryConfig
     }
 
     /**
+     * Constructor wrapper
+     *
+     * @param ContainerInterface $container
+     *
+     * @return EntityFactoryConfig
+     */
+    public static function create(ContainerInterface $container)
+    {
+        return new self($container);
+    }
+
+    /**
      * @return EntityRequestInterface
      */
     public function getEntityRequest(): EntityRequestInterface
@@ -59,21 +75,21 @@ class EntityFactoryConfig
     }
 
     /**
-     * @param EntityRequestInterface $entityRequest
+     * @param string $entityRequestClassName
      *
      * @return EntityFactoryConfig
      */
-    public function setEntityRequest(EntityRequestInterface $entityRequest
-    ): EntityFactoryConfig {
-        $this->entityRequest = $entityRequest;
+    public function setEntityRequest(string $entityRequestClassName): EntityFactoryConfig
+    {
+        $this->entityRequest = new $entityRequestClassName($this->getContainer());
 
         return $this;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getParameterToInjectInto(): string
+    public function getParameterToInjectInto()
     {
         return $this->parameterToInjectInto;
     }
@@ -83,8 +99,8 @@ class EntityFactoryConfig
      *
      * @return EntityFactoryConfig
      */
-    public function setParameterToInjectInto(string $parameterToInjectInto
-    ): EntityFactoryConfig {
+    public function setParameterToInjectInto(string $parameterToInjectInto): EntityFactoryConfig
+    {
         $this->parameterToInjectInto = $parameterToInjectInto;
 
         return $this;
@@ -96,6 +112,75 @@ class EntityFactoryConfig
     public function getRequestParameterName(): string
     {
         return $this->requestParameterName;
+    }
+
+    /**
+     * @param string $requestParameterName
+     *
+     * @return EntityFactoryConfig
+     */
+    public function setRequestParameterName(string $requestParameterName): EntityFactoryConfig
+    {
+        $this->requestParameterName = $requestParameterName;
+
+        return $this;
+    }
+
+    /**
+     * @param null $obj
+     *
+     * @return string
+     */
+    public function getSuccessLocationHeader($obj = null): string
+    {
+        if ($obj) {
+            preg_match(self::LOCATION_PATTERN, $this->successLocationHeader, $matches);
+            if (isset($matches[1])) {
+                $getter = 'get' . ucfirst($matches[1]);
+                if (method_exists($obj, $getter)) {
+                    $value = call_user_func($obj, $getter);
+                } else {
+                    throw new \RuntimeException('Getter method not found in object');
+                }
+                preg_replace(self::LOCATION_PATTERN, $value, $this->successLocationHeader);
+            } else {
+                throw new \RuntimeException('Invalid pattern for replacement');
+            }
+        }
+
+        return $this->successLocationHeader;
+    }
+
+    /**
+     * Add a Location header to the response
+     *
+     * Can take a placeholder to replace a variable by an entity getter
+     * e.g.
+     * ```php
+     * '/resource/{id}'
+     * ```
+     * will be replaced by
+     * ```php
+     * '/resource/' . $entity->getId()
+     * ```
+     *
+     * @param string $successLocationHeader
+     *
+     * @return EntityFactoryConfig
+     */
+    public function setSuccessLocationHeader(string $successLocationHeader): EntityFactoryConfig
+    {
+        $this->successLocationHeader = $successLocationHeader;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasSuccessLocationHeader(): bool
+    {
+        return $this->successLocationHeader !== null;
     }
 
     /**
@@ -111,22 +196,22 @@ class EntityFactoryConfig
      *
      * @return EntityFactoryConfig
      */
-    public function setHydrateEntityFromRequest(bool $hydrateEntityFromRequest
-    ): EntityFactoryConfig {
+    public function setHydrateEntityFromRequest(bool $hydrateEntityFromRequest): EntityFactoryConfig
+    {
         $this->hydrateEntityFromRequest = $hydrateEntityFromRequest;
 
         return $this;
     }
 
-    /**
-     * @param string $requestParameterName
-     *
-     * @return EntityFactoryConfig
-     */
-    public function setRequestParameter(string $requestParameterName
-    ): EntityFactoryConfig {
-        $this->requestParameterName = $requestParameterName;
-
-        return $this;
+    public function validate()
+    {
+        if (!$this->entityRequest) {
+            throw new EntityFactoryConfigException('Config must have an EntityRequest class');
+        }
+        if (!$this->parameterToInjectInto) {
+            throw new EntityFactoryConfigException(
+                'Config must have a parameter name for inject entity in action method'
+            );
+        }
     }
 }

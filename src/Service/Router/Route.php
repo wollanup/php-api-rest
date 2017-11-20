@@ -16,7 +16,10 @@ use Eukles\Entity\Middleware\EntityCreate;
 use Eukles\Entity\Middleware\EntityFetch;
 use Eukles\RouteMap\RouteMapInterface;
 use Eukles\Service\Router\Exception\RouteEmptyValueException;
+use Eukles\Service\Router\Exception\RouteException;
 use Eukles\Slim\DeferredCallable;
+use Psr\Http\Message\ServerRequestInterface;
+use Slim\Http\Response;
 use Zend\Permissions\Acl\Role\GenericRole;
 use Zend\Permissions\Acl\Role\RoleInterface;
 
@@ -36,22 +39,31 @@ class Route extends \Slim\Route implements RouteInterface
      */
     protected $collectionFromPks = false;
     /**
-     * @var bool
+     * @var array
      */
-    protected $createEntity = false;
+    protected $creates = [];
     /**
      * @var bool
      */
     protected $deprecated = false;
     /**
-     * @var bool
+     * @var array
      */
-    protected $fetchEntity = false;
+    protected $fetches = [];
     /**
      * @deprecated
      * @var bool
      */
     protected $instanceForceFetch = false;
+    /**
+     * Array of status sent by this route
+     * ```php
+     * [[0 => 200, 1 => "Description of when this status occurs", 2 => success status ?]]
+     * ```
+     *
+     * @var array
+     */
+    protected $statuses = [];
     /**
      * @deprecated
      * @var bool
@@ -135,6 +147,19 @@ class Route extends \Slim\Route implements RouteInterface
     }
 
     /**
+     * @param int    $status
+     * @param string $description
+     *
+     * @return $this
+     */
+    public function addStatus(int $status, string $description = "")
+    {
+        $this->statuses[] = [$status, $description, false];
+
+        return $this;
+    }
+
+    /**
      * @param RouterInterface $router
      *
      * @return mixed|void
@@ -153,45 +178,23 @@ class Route extends \Slim\Route implements RouteInterface
     }
 
     /**
-     * @param string      $entityRequestClass
-     * @param string|null $injectInActionParameterName
-     * @param bool        $hydrateEntityFromRequest
-     */
-    public function createEntity(
-        string $entityRequestClass,
-        string $injectInActionParameterName = null,
-        bool $hydrateEntityFromRequest = true
-    ) {
-        $this->createEntity = true;
-
-        $config = $this->buildEntityFactoryConfig(
-            $entityRequestClass,
-            null,
-            $injectInActionParameterName,
-            $hydrateEntityFromRequest
-
-        );
-        $this->add(new EntityCreate($config));
-    }
-
-    /**
-     * Will inject an instance of Entity (Active Record) in Action method
+     * @param EntityFactoryConfig $config
      *
-     *
-     * @param string      $entityRequestClass
-     * @param string|null $injectInActionParameterName
-     * @param bool        $hydrateEntityFromRequest
+     * @return RouteInterface
      */
-    public function createEntityFromPk(
-        string $entityRequestClass,
-        string $injectInActionParameterName = null,
-        bool $hydrateEntityFromRequest = true
-    ) {
-        $this->createEntity(
-            $entityRequestClass,
-            $injectInActionParameterName,
-            $hydrateEntityFromRequest
-        );
+    public function createEntity(EntityFactoryConfig $config): RouteInterface
+    {
+
+        # Auto determine name of parameter to add
+        if (!$config->getParameterToInjectInto()) {
+            $config->setParameterToInjectInto($config->getEntityRequest()->getNameOfParameterToAdd(false));
+        }
+
+        $config = $this->validateEntityFactoryConfig($config);
+
+        $this->creates[] = [$config->getParameterToInjectInto() => $config];
+
+        return $this->add(new EntityCreate($config));
     }
 
     /**
@@ -205,45 +208,21 @@ class Route extends \Slim\Route implements RouteInterface
     }
 
     /**
-     * @param string      $requestParameter
-     * @param string      $entityRequestClass
-     * @param string|null $injectInActionParameterName
-     * @param bool        $hydrateEntityFromRequest
+     *
+     * @param EntityFactoryConfig $config
+     *
+     * @return RouteInterface
      */
-    public function fetchEntityFromParam(
-        string $requestParameter,
-        string $entityRequestClass,
-        string $injectInActionParameterName = null,
-        bool $hydrateEntityFromRequest = true
-    ) {
-        $this->fetchEntity = true;
+    public function fetchEntity(EntityFactoryConfig $config): RouteInterface
+    {
+        # Auto determine name of parameter to add
+        if (!$config->getParameterToInjectInto()) {
+            $config->setParameterToInjectInto($config->getEntityRequest()->getNameOfParameterToAdd(false));
+        }
 
-        $config = $this->buildEntityFactoryConfig(
-            $entityRequestClass,
-            $requestParameter,
-            $injectInActionParameterName,
-            $hydrateEntityFromRequest
+        $config = $this->validateEntityFactoryConfig($config);
 
-        );
-        $this->add(new EntityFetch($config));
-    }
-
-    public function fetchEntityFromPk(
-        string $entityRequestClass,
-        string $injectInActionParameterName = null,
-        bool $hydrateEntityFromRequest = true
-    ) {
-        // TODO multiple PKS
-//        $pks = $entityRequest->getTableMap()->getPrimaryKeys();
-//        foreach ( as $index => $index) {
-//
-//        }
-        $this->fetchEntityFromParam(
-            'id',
-            $entityRequestClass,
-            $injectInActionParameterName,
-            $hydrateEntityFromRequest
-        );
+        return $this->add(new EntityFetch($config));
     }
 
     /**
@@ -284,6 +263,50 @@ class Route extends \Slim\Route implements RouteInterface
         $this->actionMethod = $actionMethod;
 
         return $this;
+    }
+
+    /**
+     * @param string $paramName
+     *
+     * @return EntityFactoryConfig
+     */
+    public function getCreate(string $paramName): EntityFactoryConfig
+    {
+        if (!$this->hasCreate($paramName)) {
+            throw new \RuntimeException("Unknown fetched parameter");
+        }
+
+        return $this->creates[$paramName];
+    }
+
+    /**
+     * @return array
+     */
+    public function getCreates(): array
+    {
+        return $this->creates;
+    }
+
+    /**
+     * @param string $paramName
+     *
+     * @return EntityFactoryConfig
+     */
+    public function getFetch(string $paramName): EntityFactoryConfig
+    {
+        if (!$this->hasFetch($paramName)) {
+            throw new \RuntimeException("Unknown fetched parameter");
+        }
+
+        return $this->fetches[$paramName];
+    }
+
+    /**
+     * @return array
+     */
+    public function getFetches(): array
+    {
+        return $this->fetches;
     }
 
     public function getName()
@@ -407,6 +430,42 @@ class Route extends \Slim\Route implements RouteInterface
     }
 
     /**
+     * @param string $paramName
+     *
+     * @return bool
+     */
+    public function hasCreate(string $paramName): bool
+    {
+        return isset($this->creates[$paramName]);
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasCreates(): bool
+    {
+        return !empty($this->creates);
+    }
+
+    /**
+     * @param string $paramName
+     *
+     * @return bool
+     */
+    public function hasFetch(string $paramName): bool
+    {
+        return isset($this->fetches[$paramName]);
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasFetches(): bool
+    {
+        return !empty($this->fetches);
+    }
+
+    /**
      * @return bool
      */
     public function hasRoles(): bool
@@ -417,25 +476,9 @@ class Route extends \Slim\Route implements RouteInterface
     /**
      * @return bool
      */
-    public function isCreateEntity(): bool
-    {
-        return $this->createEntity;
-    }
-
-    /**
-     * @return bool
-     */
     public function isDeprecated(): bool
     {
         return $this->deprecated;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isFetchEntity(): bool
-    {
-        return $this->fetchEntity;
     }
 
     /**
@@ -449,6 +492,7 @@ class Route extends \Slim\Route implements RouteInterface
     /**
      * @param bool $forceFetch
      *
+     * @deprecated Not replaced yet
      * @return RouteInterface
      */
     public function makeCollection(bool $forceFetch = false): RouteInterface
@@ -462,6 +506,9 @@ class Route extends \Slim\Route implements RouteInterface
     /**
      * @param bool $forceFetch
      *
+     * @deprecated
+     * @see Route::fetchEntity()
+     * @see Route::createEntity()
      * @return RouteInterface
      */
     public function makeInstance(bool $forceFetch = false): RouteInterface
@@ -485,6 +532,32 @@ class Route extends \Slim\Route implements RouteInterface
     }
 
     /**
+     * Set status code in case of success response
+     *
+     * @param int    $status
+     * @param string $description
+     *
+     * @return RouteInterface
+     *
+     */
+    public function setSuccessStatus(int $status, string $description = ""): RouteInterface
+    {
+        $this->statuses[] = [$status, $description, true];
+
+        return $this->add(
+            function (ServerRequestInterface $request, Response $response, $next) use ($status) {
+                /** @var Response $response */
+                $response = $next($request, $response);
+                if ($response->isSuccessful()) {
+                    $response = $response->withStatus($status);
+                }
+
+                return $response;
+            }
+        );
+    }
+
+    /**
      * @inheritdoc
      */
     public function useRequest(bool $bool): RouteInterface
@@ -492,37 +565,6 @@ class Route extends \Slim\Route implements RouteInterface
         $this->useRequest = $bool;
 
         return $this;
-    }
-
-    /**
-     * @param string      $entityRequestClass
-     * @param string|null $requestParameter
-     * @param string|null $injectInActionParameterName
-     * @param bool        $hydrateEntityFromRequest
-     *
-     * @return EntityFactoryConfig
-     */
-    private function buildEntityFactoryConfig(
-        string $entityRequestClass,
-        string $requestParameter = null,
-        string $injectInActionParameterName = null,
-        bool $hydrateEntityFromRequest = true
-    ): EntityFactoryConfig {
-
-        $config = new EntityFactoryConfig($this->getContainer());
-
-        if ($requestParameter) {
-            $config->setRequestParameter($requestParameter);
-        }
-
-        $config
-            ->setEntityRequest(new $entityRequestClass($this->getContainer()))
-            ->setParameterToInjectInto($injectInActionParameterName
-                ?: $this->nameOfInjectedParam)
-            ->setHydrateEntityFromRequest($hydrateEntityFromRequest
-                ?: $this->useRequest);
-
-        return $config;
     }
 
     /**
@@ -538,5 +580,23 @@ class Route extends \Slim\Route implements RouteInterface
         }
 
         return $value;
+    }
+
+    /**
+     *
+     * @param EntityFactoryConfig $config
+     *
+     * @return EntityFactoryConfig
+     * @throws RouteException
+     */
+    private function validateEntityFactoryConfig(EntityFactoryConfig $config): EntityFactoryConfig
+    {
+        # TODO Legacy to remove
+        $config->setHydrateEntityFromRequest($this->useRequest);
+
+        # Make sure config is clean
+        $config->validate();
+
+        return $config;
     }
 }

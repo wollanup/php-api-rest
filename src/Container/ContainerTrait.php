@@ -10,12 +10,12 @@ namespace Eukles\Container;
 
 trait ContainerTrait
 {
-    
+
     /**
      * @var ContainerInterface
      */
     protected $container;
-    
+
     /**
      * Allows serialization of RouteMap classes
      *
@@ -26,27 +26,27 @@ trait ContainerTrait
         $properties = get_object_vars($this);
         unset($properties['container']);
         $properties = array_keys($properties);
-        
+
         return $properties;
     }
-    
+
     /**
-     * @return \Psr\Container\ContainerInterface
+     * @return \Psr\Container\ContainerInterface|ContainerInterface
      */
     public function getContainer(): \Psr\Container\ContainerInterface
     {
         return $this->container;
     }
-    
+
     /**
-     * @param \Psr\Container\ContainerInterface $c
+     * @param \Psr\Container\ContainerInterface|ContainerInterface $c
      *
      * @return $this
      */
     public function setContainer(\Psr\Container\ContainerInterface $c)
     {
         $this->container = $c;
-        
+
         return $this;
     }
 }

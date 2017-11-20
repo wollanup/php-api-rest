@@ -224,4 +224,9 @@ interface EntityRequestInterface
      * @return EntityRequestInterface
      */
     public function setPrimaryKey($pk);
+
+    /**
+     * @return ActiveRecordInterface|string
+     */
+    public function getActiveRecordClassName();
 }

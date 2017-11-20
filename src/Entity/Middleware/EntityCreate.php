@@ -49,13 +49,11 @@ class EntityCreate implements RouteEntityMiddlewareInterface
     public function __invoke($request, $response, $next): ResponseInterface
     {
         /** @var ContainerInterface $this */
-        $response = $this->getContainer()->getEntityFactory()->create(
+        return $this->getContainer()->getEntityFactory()->create(
             $this->config,
             $request,
             $response,
             $next
         );
-
-        return $response;
     }
 }
