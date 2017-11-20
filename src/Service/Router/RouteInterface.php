@@ -296,6 +296,7 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
      *
      * @param $bool
      *
+     * @deprecated
      * @return RouteInterface
      */
     public function useRequest(bool $bool): RouteInterface;
