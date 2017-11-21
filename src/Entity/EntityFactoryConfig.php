@@ -278,7 +278,7 @@ class EntityFactoryConfig
         if (!$this->type || !in_array($this->type, self::$types)) {
             throw new EntityFactoryConfigException('Config must have an EntityRequest class');
         }
-        if (!$this->hydrateEntityFromRequest) {
+        if ($this->hydrateEntityFromRequest === null) {
             throw new EntityFactoryConfigException('Config must know if entity will be hydrated with request params');
         }
         if (!$this->entityRequest) {
