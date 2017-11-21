@@ -94,28 +94,16 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
     public function getCallable();
 
     /**
-     * @param string $paramName
-     *
-     * @return EntityFactoryConfig
+     * @return EntityFactoryConfig[]
      */
-    public function getCreate(string $paramName): EntityFactoryConfig;
-
-    /**
-     * @return array
-     */
-    public function getCreates(): array;
+    public function getEntities(): array;
 
     /**
      * @param string $paramName
      *
      * @return EntityFactoryConfig
      */
-    public function getFetch(string $paramName): EntityFactoryConfig;
-
-    /**
-     * @return array
-     */
-    public function getFetches(): array;
+    public function getEntityConfig(string $paramName): EntityFactoryConfig;
 
     /**
      * @return string
@@ -150,34 +138,27 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
     public function getRoles(): array;
 
     /**
+     * @return HttpStatus[]
+     */
+    public function getStatuses(): array;
+
+    /**
      * @return string
      * @throws RouteEmptyValueException
      */
     public function getVerb(): string;
 
     /**
-     * @param string $paramName
-     *
      * @return bool
      */
-    public function hasCreate(string $paramName): bool;
-
-    /**
-     * @return bool
-     */
-    public function hasCreates(): bool;
+    public function hasEntities(): bool;
 
     /**
      * @param string $paramName
      *
      * @return bool
      */
-    public function hasFetch(string $paramName): bool;
-
-    /**
-     * @return bool
-     */
-    public function hasFetches(): bool;
+    public function hasEntity(string $paramName): bool;
 
     /**
      * @return bool

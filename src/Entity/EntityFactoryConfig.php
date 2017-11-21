@@ -13,8 +13,17 @@ use Eukles\Container\ContainerTrait;
 
 class EntityFactoryConfig
 {
+
     use ContainerTrait;
+    const TYPE_FETCH = 'fetch';
+    const TYPE_CREATE = 'create';
     const LOCATION_PATTERN = '#\{(\w+)\}#';
+    /**
+     * Instance creation method
+     *
+     * @var array
+     */
+    protected static $types = [self::TYPE_CREATE, self::TYPE_FETCH];
     /**
      * Entity Request class used to instantiate and hydrate Entity
      *
@@ -26,7 +35,7 @@ class EntityFactoryConfig
      *
      * @var bool
      */
-    protected $hydrateEntityFromRequest = true;
+    protected $hydrateEntityFromRequest;
     /**
      * Name of parameter in Action method
      *
@@ -43,6 +52,10 @@ class EntityFactoryConfig
      * @var string
      */
     protected $successLocationHeader = "";
+    /**
+     * @var string
+     */
+    protected $type;
 
     /**
      * EntityFactoryConfig constructor.
@@ -75,14 +88,6 @@ class EntityFactoryConfig
     }
 
     /**
-     * @return bool
-     */
-    public function hasEntityRequest(): bool
-    {
-        return null !== $this->entityRequest;
-    }
-
-    /**
      * @param string $entityRequestClassName
      *
      * @return EntityFactoryConfig
@@ -95,11 +100,19 @@ class EntityFactoryConfig
     }
 
     /**
-     * @return string|null
+     * @return string
      */
-    public function getParameterToInjectInto()
+    public function getParameterToInjectInto(): string
     {
         return $this->parameterToInjectInto;
+    }
+
+    /**
+     * @return bool
+     */
+    public function issetParameterToInjectInto(): bool
+    {
+        return $this->parameterToInjectInto !== null;
     }
 
     /**
@@ -184,6 +197,55 @@ class EntityFactoryConfig
     }
 
     /**
+     * @return string
+     */
+    public function getType(): string
+    {
+        return $this->type;
+    }
+
+    public function issetHydrateEntityFromRequest(): bool
+    {
+        return $this->hydrateEntityFromRequest !== null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTypeFetch(): bool
+    {
+        return $this->type === self::TYPE_FETCH;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTypeCreate(): bool
+    {
+        return $this->type === self::TYPE_CREATE;
+    }
+
+    /**
+     * @param string $type
+     *
+     * @return EntityFactoryConfig
+     */
+    public function setType(string $type): EntityFactoryConfig
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function issetEntityRequest(): bool
+    {
+        return null !== $this->entityRequest;
+    }
+
+    /**
      * @return bool
      */
     public function hasSuccessLocationHeader(): bool
@@ -213,6 +275,12 @@ class EntityFactoryConfig
 
     public function validate()
     {
+        if (!$this->type || !in_array($this->type, self::$types)) {
+            throw new EntityFactoryConfigException('Config must have an EntityRequest class');
+        }
+        if (!$this->hydrateEntityFromRequest) {
+            throw new EntityFactoryConfigException('Config must know if entity will be hydrated with request params');
+        }
         if (!$this->entityRequest) {
             throw new EntityFactoryConfigException('Config must have an EntityRequest class');
         }
