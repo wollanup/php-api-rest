@@ -179,12 +179,8 @@ class Route extends \Slim\Route implements RouteInterface
      */
     public function createEntity(EntityFactoryConfig $config): RouteInterface
     {
+        # Auto set type
         $config->setType(EntityFactoryConfig::TYPE_CREATE);
-
-        # Auto determine name of parameter to add
-        if (!$config->issetParameterToInjectInto()) {
-            $config->setParameterToInjectInto($config->getEntityRequest()->getNameOfParameterToAdd(false));
-        }
         # Auto determine if we hydrate from request or not
         if (!$config->issetHydrateEntityFromRequest()) {
             $config->setHydrateEntityFromRequest(true);
@@ -192,6 +188,10 @@ class Route extends \Slim\Route implements RouteInterface
         # Auto add EntityRequest if not specified
         if (!$config->issetEntityRequest()) {
             $config->setEntityRequest($this->requestClass);
+        }
+        # Auto determine name of parameter to add
+        if (!$config->issetParameterToInjectInto()) {
+            $config->setParameterToInjectInto($config->getEntityRequest()->getNameOfParameterToAdd(false));
         }
 
         # Make sure config is clean
@@ -221,12 +221,8 @@ class Route extends \Slim\Route implements RouteInterface
     public function fetchEntity(EntityFactoryConfig $config): RouteInterface
     {
 
+        # Auto set type
         $config->setType(EntityFactoryConfig::TYPE_FETCH);
-
-        # Auto determine name of parameter to add
-        if (!$config->issetParameterToInjectInto()) {
-            $config->setParameterToInjectInto($config->getEntityRequest()->getNameOfParameterToAdd(false));
-        }
         # Auto determine if we hydrate from request or not
         if (!$config->issetHydrateEntityFromRequest()) {
             $config->setHydrateEntityFromRequest($this->getVerb() !== 'GET');
@@ -234,6 +230,10 @@ class Route extends \Slim\Route implements RouteInterface
         # Auto add EntityRequest if not specified
         if (!$config->issetEntityRequest()) {
             $config->setEntityRequest($this->requestClass);
+        }
+        # Auto determine name of parameter to add
+        if (!$config->issetParameterToInjectInto()) {
+            $config->setParameterToInjectInto($config->getEntityRequest()->getNameOfParameterToAdd(false));
         }
 
         # Make sure config is clean
