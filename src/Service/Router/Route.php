@@ -16,7 +16,6 @@ use Eukles\Entity\Middleware\EntityCreate;
 use Eukles\Entity\Middleware\EntityFetch;
 use Eukles\RouteMap\RouteMapInterface;
 use Eukles\Service\Router\Exception\RouteEmptyValueException;
-use Eukles\Service\Router\Exception\RouteException;
 use Eukles\Slim\DeferredCallable;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Http\Response;
@@ -57,11 +56,6 @@ class Route extends \Slim\Route implements RouteInterface
      * @var HttpStatus[]
      */
     protected $statuses = [];
-    /**
-     * @deprecated
-     * @var bool
-     */
-    protected $useRequest = true;
     /**
      * @var string
      */
@@ -195,8 +189,10 @@ class Route extends \Slim\Route implements RouteInterface
         if (!$config->issetHydrateEntityFromRequest()) {
             $config->setHydrateEntityFromRequest(true);
         }
-
-        $this->legacyCompatEntityFactoryConfig($config);
+        # Auto add EntityRequest if not specified
+        if (!$config->issetEntityRequest()) {
+            $config->setEntityRequest($this->requestClass);
+        }
 
         # Make sure config is clean
         $config->validate();
@@ -235,8 +231,10 @@ class Route extends \Slim\Route implements RouteInterface
         if (!$config->issetHydrateEntityFromRequest()) {
             $config->setHydrateEntityFromRequest($this->getVerb() !== 'GET');
         }
-
-        $this->legacyCompatEntityFactoryConfig($config);
+        # Auto add EntityRequest if not specified
+        if (!$config->issetEntityRequest()) {
+            $config->setEntityRequest($this->requestClass);
+        }
 
         # Make sure config is clean
         $config->validate();
@@ -557,16 +555,6 @@ class Route extends \Slim\Route implements RouteInterface
     }
 
     /**
-     * @inheritdoc
-     */
-    public function useRequest(bool $bool): RouteInterface
-    {
-        $this->useRequest = $bool;
-
-        return $this;
-    }
-
-    /**
      * @param mixed $value
      *
      * @return mixed
@@ -579,23 +567,5 @@ class Route extends \Slim\Route implements RouteInterface
         }
 
         return $value;
-    }
-
-    /**
-     *
-     * @param EntityFactoryConfig $config
-     *
-     * @todo TODO Legacy to remove
-     * @throws RouteException
-     */
-    private function legacyCompatEntityFactoryConfig(EntityFactoryConfig $config)
-    {
-        //TODO remove
-        if (!$config->issetHydrateEntityFromRequest()) {
-            $config->setHydrateEntityFromRequest($this->useRequest);
-        }
-        if (!$config->issetEntityRequest()) {
-            $config->setEntityRequest($this->requestClass);
-        }
     }
 }
