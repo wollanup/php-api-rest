@@ -12,13 +12,12 @@ use Eukles\Container\ContainerInterface;
 use Eukles\Container\ContainerTrait;
 use Eukles\Entity\EntityFactoryConfig;
 use Eukles\Entity\Middleware\CollectionFetch;
-use Eukles\Entity\Middleware\EntityCreate;
-use Eukles\Entity\Middleware\EntityFetch;
+use Eukles\Entity\Middleware\EntityMiddleware;
 use Eukles\RouteMap\RouteMapInterface;
 use Eukles\Service\Router\Exception\RouteEmptyValueException;
+use Eukles\Service\Router\Middleware\SuccessHeaderLocationMiddleware;
+use Eukles\Service\Router\Middleware\SuccessStatusMiddleware;
 use Eukles\Slim\DeferredCallable;
-use Psr\Http\Message\ServerRequestInterface;
-use Slim\Http\Response;
 use Zend\Permissions\Acl\Role\GenericRole;
 use Zend\Permissions\Acl\Role\RoleInterface;
 
@@ -117,6 +116,18 @@ class Route extends \Slim\Route implements RouteInterface
     }
 
     /**
+     * @param callable|string $callable
+     *
+     * @return $this
+     */
+    public function addFirst($callable)
+    {
+        array_unshift($this->middleware, new DeferredCallable($callable, $this->container));
+
+        return $this;
+    }
+
+    /**
      * @param string|RoleInterface $role
      *
      * @return RouteInterface
@@ -187,7 +198,7 @@ class Route extends \Slim\Route implements RouteInterface
         }
         # Auto add EntityRequest if not specified
         if (!$config->issetEntityRequest()) {
-            $config->setEntityRequest($this->requestClass);
+            $config->setEntityRequest(new $this->requestClass($this->getContainer()));
         }
         # Auto determine name of parameter to add
         if (!$config->issetParameterToInjectInto()) {
@@ -199,7 +210,7 @@ class Route extends \Slim\Route implements RouteInterface
 
         $this->entities[$config->getParameterToInjectInto()] = $config;
 
-        return $this->add(new EntityCreate($config));
+        return $this->add(new EntityMiddleware($this->getContainer(), $config));
     }
 
     /**
@@ -229,7 +240,7 @@ class Route extends \Slim\Route implements RouteInterface
         }
         # Auto add EntityRequest if not specified
         if (!$config->issetEntityRequest()) {
-            $config->setEntityRequest($this->requestClass);
+            $config->setEntityRequest(new $this->requestClass($this->getContainer()));
         }
         # Auto determine name of parameter to add
         if (!$config->issetParameterToInjectInto()) {
@@ -241,7 +252,7 @@ class Route extends \Slim\Route implements RouteInterface
 
         $this->entities[$config->getParameterToInjectInto()] = $config;
 
-        return $this->add(new EntityFetch($config));
+        return $this->add(new EntityMiddleware($this->getContainer(), $config));
     }
 
     /**
@@ -503,9 +514,9 @@ class Route extends \Slim\Route implements RouteInterface
     public function makeInstance(bool $forceFetch = false): RouteInterface
     {
         if ($forceFetch || $this->getVerb() !== 'POST') {
-            $this->fetchEntity(EntityFactoryConfig::create($this->container));
+            $this->fetchEntity(EntityFactoryConfig::create());
         } else {
-            $this->createEntity(EntityFactoryConfig::create($this->container));
+            $this->createEntity(EntityFactoryConfig::create());
         }
         $this->instanceFromPk     = true;
         $this->instanceForceFetch = $forceFetch;
@@ -541,18 +552,40 @@ class Route extends \Slim\Route implements RouteInterface
             ->setDescription($description)
             ->setMainSuccess(true);
 
-        return $this->add(
-            function (ServerRequestInterface $request, Response $response, $next) use ($status) {
-                /** @var Response $response */
-                $response = $next($request, $response);
-                if ($response->isSuccessful()) {
-                    $response = $response->withStatus($status);
-                }
-
-                return $response;
-            }
-        );
+        /**
+         * This middleware is an "AFTER" middleware, so add it first to be run last...
+         */
+        return $this->addFirst(new SuccessStatusMiddleware($status));
     }
+
+    /**
+     * Add a Location header to the response
+     *
+     * Can take a placeholder to replace a variable by an entity getter
+     * e.g.
+     * ```php
+     * '/resource/{id}'
+     * ```
+     * will be replaced by
+     * ```php
+     * '/resource/' . $entity->getId()
+     * ```
+     *
+     * @param string              $location
+     * @param EntityFactoryConfig $config
+     *
+     * @return RouteInterface
+     *
+     */
+    public function setSuccessLocationHeader(string $location, EntityFactoryConfig $config): RouteInterface
+    {
+        return $this->addFirst(new SuccessHeaderLocationMiddleware($location, $config));
+    }
+
+//    public function setPaginateHeaders()
+//    {
+//        return $this->addFirst(new SuccessHeaderLocationMiddleware($location, $config));
+//    }
 
     /**
      * @param mixed $value

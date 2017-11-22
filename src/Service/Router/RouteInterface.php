@@ -188,7 +188,6 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
      * @deprecated
      * @see Route::fetchEntity()
      * @see Route::createEntity()
-
      * @return RouteInterface
      */
     public function makeInstance(bool $forceFetch = false): RouteInterface;
@@ -253,6 +252,27 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
     public function setRoles(array $roles): RouteInterface;
 
     /**
+     * Add a Location header to the response
+     *
+     * Can take a placeholder to replace a variable by an entity getter
+     * e.g.
+     * ```php
+     * '/resource/{id}'
+     * ```
+     * will be replaced by
+     * ```php
+     * '/resource/' . $entity->getId()
+     * ```
+     *
+     * @param string              $location
+     * @param EntityFactoryConfig $config
+     *
+     * @return RouteInterface
+     *
+     */
+    public function setSuccessLocationHeader(string $location, EntityFactoryConfig $config): RouteInterface;
+
+    /**
      * Set status code in case of success response
      *
      * @param int    $status      HTTP status code
@@ -269,5 +289,4 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
      * @return RouteInterface
      */
     public function setVerb(string $verb): RouteInterface;
-
 }

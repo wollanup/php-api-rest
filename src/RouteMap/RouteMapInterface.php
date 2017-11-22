@@ -114,4 +114,11 @@ interface RouteMapInterface extends \Iterator
      * @param RouterInterface $router
      */
     public function registerRoutes(RouterInterface $router);
+
+    /**
+     * @param ContainerInterface $c
+     *
+     * @return mixed
+     */
+    public function setContainer(ContainerInterface $c);
 }

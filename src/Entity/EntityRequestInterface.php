@@ -24,6 +24,12 @@ interface EntityRequestInterface
     public function __construct(ContainerInterface $c);
 
     /**
+     * @param \Psr\Container\ContainerInterface|ContainerInterface $c
+     *
+     * @return mixed
+     */
+    public function setContainer(\Psr\Container\ContainerInterface $c);
+    /**
      * Set state of the object after request data hydration
      *
      * @param ActiveRecordInterface $obj

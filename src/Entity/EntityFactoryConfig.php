@@ -8,16 +8,12 @@
 
 namespace Eukles\Entity;
 
-use Eukles\Container\ContainerInterface;
-use Eukles\Container\ContainerTrait;
 
 class EntityFactoryConfig
 {
 
-    use ContainerTrait;
     const TYPE_FETCH = 'fetch';
     const TYPE_CREATE = 'create';
-    const LOCATION_PATTERN = '#\{(\w+)\}#';
     /**
      * Instance creation method
      *
@@ -48,35 +44,21 @@ class EntityFactoryConfig
      * @var string
      */
     protected $requestParameterName = "id";
-    /**
-     * @var string
-     */
-    protected $successLocationHeader = "";
+
     /**
      * @var string
      */
     protected $type;
 
-    /**
-     * EntityFactoryConfig constructor.
-     *
-     * @param ContainerInterface $container
-     */
-    public function __construct(ContainerInterface $container)
-    {
-        $this->container = $container;
-    }
 
     /**
      * Constructor wrapper
      *
-     * @param ContainerInterface $container
-     *
      * @return EntityFactoryConfig
      */
-    public static function create(ContainerInterface $container)
+    public static function create()
     {
-        return new self($container);
+        return new self();
     }
 
     /**
@@ -88,13 +70,13 @@ class EntityFactoryConfig
     }
 
     /**
-     * @param string $entityRequestClassName
+     * @param EntityRequestInterface $entityRequestClass
      *
      * @return EntityFactoryConfig
      */
-    public function setEntityRequest(string $entityRequestClassName): EntityFactoryConfig
+    public function setEntityRequest(EntityRequestInterface $entityRequestClass): EntityFactoryConfig
     {
-        $this->entityRequest = new $entityRequestClassName($this->getContainer());
+        $this->entityRequest = $entityRequestClass;
 
         return $this;
     }
@@ -105,14 +87,6 @@ class EntityFactoryConfig
     public function getParameterToInjectInto(): string
     {
         return $this->parameterToInjectInto;
-    }
-
-    /**
-     * @return bool
-     */
-    public function issetParameterToInjectInto(): bool
-    {
-        return $this->parameterToInjectInto !== null;
     }
 
     /**
@@ -147,54 +121,6 @@ class EntityFactoryConfig
         return $this;
     }
 
-    /**
-     * @param null $obj
-     *
-     * @return string
-     */
-    public function getSuccessLocationHeader($obj = null): string
-    {
-        if ($obj) {
-            preg_match(self::LOCATION_PATTERN, $this->successLocationHeader, $matches);
-            if (isset($matches[1])) {
-                $getter = 'get' . ucfirst($matches[1]);
-                if (method_exists($obj, $getter)) {
-                    $value = call_user_func([$obj, $getter]);
-                } else {
-                    throw new \RuntimeException('Getter method not found in object');
-                }
-                preg_replace(self::LOCATION_PATTERN, $value, $this->successLocationHeader);
-            } else {
-                throw new \RuntimeException('Invalid pattern for replacement');
-            }
-        }
-
-        return $this->successLocationHeader;
-    }
-
-    /**
-     * Add a Location header to the response
-     *
-     * Can take a placeholder to replace a variable by an entity getter
-     * e.g.
-     * ```php
-     * '/resource/{id}'
-     * ```
-     * will be replaced by
-     * ```php
-     * '/resource/' . $entity->getId()
-     * ```
-     *
-     * @param string $successLocationHeader
-     *
-     * @return EntityFactoryConfig
-     */
-    public function setSuccessLocationHeader(string $successLocationHeader): EntityFactoryConfig
-    {
-        $this->successLocationHeader = $successLocationHeader;
-
-        return $this;
-    }
 
     /**
      * @return string
@@ -202,27 +128,6 @@ class EntityFactoryConfig
     public function getType(): string
     {
         return $this->type;
-    }
-
-    public function issetHydrateEntityFromRequest(): bool
-    {
-        return $this->hydrateEntityFromRequest !== null;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isTypeFetch(): bool
-    {
-        return $this->type === self::TYPE_FETCH;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isTypeCreate(): bool
-    {
-        return $this->type === self::TYPE_CREATE;
     }
 
     /**
@@ -235,22 +140,6 @@ class EntityFactoryConfig
         $this->type = $type;
 
         return $this;
-    }
-
-    /**
-     * @return bool
-     */
-    public function issetEntityRequest(): bool
-    {
-        return null !== $this->entityRequest;
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasSuccessLocationHeader(): bool
-    {
-        return $this->successLocationHeader !== null;
     }
 
     /**
@@ -271,6 +160,43 @@ class EntityFactoryConfig
         $this->hydrateEntityFromRequest = $hydrateEntityFromRequest;
 
         return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTypeCreate(): bool
+    {
+        return $this->type === self::TYPE_CREATE;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTypeFetch(): bool
+    {
+        return $this->type === self::TYPE_FETCH;
+    }
+
+    /**
+     * @return bool
+     */
+    public function issetEntityRequest(): bool
+    {
+        return null !== $this->entityRequest;
+    }
+
+    public function issetHydrateEntityFromRequest(): bool
+    {
+        return $this->hydrateEntityFromRequest !== null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function issetParameterToInjectInto(): bool
+    {
+        return $this->parameterToInjectInto !== null;
     }
 
     public function validate()

@@ -56,22 +56,9 @@ class EntityFactory implements EntityFactoryInterface
         # Execute afterCreate hook, which can alter record
         $entityRequest->afterCreate($obj);
 
-        /** @var $request ServerRequestInterface */
-        $newRequest = $request->withAttribute($config->getParameterToInjectInto(), $obj);
-
+        $request = $request->withAttribute($config->getParameterToInjectInto(), $obj);
         /** @var Response $response */
-        $response = $next($newRequest, $response);
-
-        if ($config->hasSuccessLocationHeader() && $response->isSuccessful()) {
-            $uri      = $request->getUri();
-            $location = $uri->getScheme() . '://';
-            $location .= $uri->getHost();
-            $location .= $uri->getPort() ? ':' . $uri->getPort() : "";
-            $location .= $config->getSuccessLocationHeader($obj);
-            $response = $response->withHeader('Location', $location);
-        }
-
-        return $response;
+        return $next($request, $response);
     }
 
     /**
@@ -138,10 +125,9 @@ class EntityFactory implements EntityFactoryInterface
         # Then, execute afterFetch hook, which can alter the object
         $entityRequest->afterFetch($obj);
 
-        $newRequest = $request->withAttribute($config->getParameterToInjectInto(), $obj);
-        $response   = $next($newRequest, $response);
+        $request = $request->withAttribute($config->getParameterToInjectInto(), $obj);
 
-        return $response;
+        return $next($request, $response);
     }
 
     /**
@@ -205,10 +191,9 @@ class EntityFactory implements EntityFactoryInterface
             $nameOfParameterToAdd
                 = $entityRequest->getNameOfParameterToAdd(true);
         }
-        $newRequest = $request->withAttribute($nameOfParameterToAdd, $col);
-        $response   = $next($newRequest, $response);
+        $request = $request->withAttribute($nameOfParameterToAdd, $col);
 
-        return $response;
+        return $next($request, $response);
     }
 
     /**
