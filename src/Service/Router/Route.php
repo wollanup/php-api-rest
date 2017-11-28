@@ -12,10 +12,11 @@ use Eukles\Container\ContainerInterface;
 use Eukles\Container\ContainerTrait;
 use Eukles\Entity\EntityFactoryConfig;
 use Eukles\Entity\Middleware\CollectionFetch;
-use Eukles\Entity\Middleware\EntityCreate;
-use Eukles\Entity\Middleware\EntityFetch;
+use Eukles\Entity\Middleware\EntityMiddleware;
 use Eukles\RouteMap\RouteMapInterface;
 use Eukles\Service\Router\Exception\RouteEmptyValueException;
+use Eukles\Service\Router\Middleware\SuccessHeaderLocationMiddleware;
+use Eukles\Service\Router\Middleware\SuccessStatusMiddleware;
 use Eukles\Slim\DeferredCallable;
 use Zend\Permissions\Acl\Role\GenericRole;
 use Zend\Permissions\Acl\Role\RoleInterface;
@@ -36,27 +37,24 @@ class Route extends \Slim\Route implements RouteInterface
      */
     protected $collectionFromPks = false;
     /**
-     * @var bool
+     * @var array
      */
-    protected $createEntity = false;
+    protected $entities = [];
     /**
      * @var bool
      */
     protected $deprecated = false;
-    /**
-     * @var bool
-     */
-    protected $fetchEntity = false;
     /**
      * @deprecated
      * @var bool
      */
     protected $instanceForceFetch = false;
     /**
-     * @deprecated
-     * @var bool
+     * Array of status sent by this route
+     *
+     * @var HttpStatus[]
      */
-    protected $useRequest = true;
+    protected $statuses = [];
     /**
      * @var string
      */
@@ -80,6 +78,7 @@ class Route extends \Slim\Route implements RouteInterface
      */
     private $package;
     /**
+     * @deprecated will be remove when fetchCollection will be implemented
      * @var string
      */
     private $requestClass;
@@ -117,6 +116,18 @@ class Route extends \Slim\Route implements RouteInterface
     }
 
     /**
+     * @param callable|string $callable
+     *
+     * @return $this
+     */
+    public function addFirst($callable)
+    {
+        array_unshift($this->middleware, new DeferredCallable($callable, $this->container));
+
+        return $this;
+    }
+
+    /**
      * @param string|RoleInterface $role
      *
      * @return RouteInterface
@@ -130,6 +141,26 @@ class Route extends \Slim\Route implements RouteInterface
                 'addRole() expects $role to be of type Zend\Permissions\Acl\Role\RoleInterface'
             );
         }
+
+        return $this;
+    }
+
+    /**
+     * @param int    $status
+     * @param string $description
+     *
+     * @param bool   $isMainSuccess
+     *
+     * @return $this
+     */
+    public function addStatus(int $status, string $description = "", $isMainSuccess = false)
+    {
+        $this->statuses[$status] = [$description, false];
+
+        $this->statuses[$status] = HttpStatus::create()
+            ->setStatus($status)
+            ->setDescription($description)
+            ->setMainSuccess($isMainSuccess);
 
         return $this;
     }
@@ -153,45 +184,33 @@ class Route extends \Slim\Route implements RouteInterface
     }
 
     /**
-     * @param string      $entityRequestClass
-     * @param string|null $injectInActionParameterName
-     * @param bool        $hydrateEntityFromRequest
-     */
-    public function createEntity(
-        string $entityRequestClass,
-        string $injectInActionParameterName = null,
-        bool $hydrateEntityFromRequest = true
-    ) {
-        $this->createEntity = true;
-
-        $config = $this->buildEntityFactoryConfig(
-            $entityRequestClass,
-            null,
-            $injectInActionParameterName,
-            $hydrateEntityFromRequest
-
-        );
-        $this->add(new EntityCreate($config));
-    }
-
-    /**
-     * Will inject an instance of Entity (Active Record) in Action method
+     * @param EntityFactoryConfig $config
      *
-     *
-     * @param string      $entityRequestClass
-     * @param string|null $injectInActionParameterName
-     * @param bool        $hydrateEntityFromRequest
+     * @return RouteInterface
      */
-    public function createEntityFromPk(
-        string $entityRequestClass,
-        string $injectInActionParameterName = null,
-        bool $hydrateEntityFromRequest = true
-    ) {
-        $this->createEntity(
-            $entityRequestClass,
-            $injectInActionParameterName,
-            $hydrateEntityFromRequest
-        );
+    public function createEntity(EntityFactoryConfig $config): RouteInterface
+    {
+        # Auto set type
+        $config->setType(EntityFactoryConfig::TYPE_CREATE);
+        # Auto determine if we hydrate from request or not
+        if (!$config->issetHydrateEntityFromRequest()) {
+            $config->setHydrateEntityFromRequest(true);
+        }
+        # Auto add EntityRequest if not specified
+        if (!$config->issetEntityRequest()) {
+            $config->setEntityRequest(new $this->requestClass($this->getContainer()));
+        }
+        # Auto determine name of parameter to add
+        if (!$config->issetParameterToInjectInto()) {
+            $config->setParameterToInjectInto($config->getEntityRequest()->getNameOfParameterToAdd(false));
+        }
+
+        # Make sure config is clean
+        $config->validate();
+
+        $this->entities[$config->getParameterToInjectInto()] = $config;
+
+        return $this->add(new EntityMiddleware($this->getContainer(), $config));
     }
 
     /**
@@ -205,45 +224,35 @@ class Route extends \Slim\Route implements RouteInterface
     }
 
     /**
-     * @param string      $requestParameter
-     * @param string      $entityRequestClass
-     * @param string|null $injectInActionParameterName
-     * @param bool        $hydrateEntityFromRequest
+     *
+     * @param EntityFactoryConfig $config
+     *
+     * @return RouteInterface
      */
-    public function fetchEntityFromParam(
-        string $requestParameter,
-        string $entityRequestClass,
-        string $injectInActionParameterName = null,
-        bool $hydrateEntityFromRequest = true
-    ) {
-        $this->fetchEntity = true;
+    public function fetchEntity(EntityFactoryConfig $config): RouteInterface
+    {
 
-        $config = $this->buildEntityFactoryConfig(
-            $entityRequestClass,
-            $requestParameter,
-            $injectInActionParameterName,
-            $hydrateEntityFromRequest
+        # Auto set type
+        $config->setType(EntityFactoryConfig::TYPE_FETCH);
+        # Auto determine if we hydrate from request or not
+        if (!$config->issetHydrateEntityFromRequest()) {
+            $config->setHydrateEntityFromRequest($this->getVerb() !== 'GET');
+        }
+        # Auto add EntityRequest if not specified
+        if (!$config->issetEntityRequest()) {
+            $config->setEntityRequest(new $this->requestClass($this->getContainer()));
+        }
+        # Auto determine name of parameter to add
+        if (!$config->issetParameterToInjectInto()) {
+            $config->setParameterToInjectInto($config->getEntityRequest()->getNameOfParameterToAdd(false));
+        }
 
-        );
-        $this->add(new EntityFetch($config));
-    }
+        # Make sure config is clean
+        $config->validate();
 
-    public function fetchEntityFromPk(
-        string $entityRequestClass,
-        string $injectInActionParameterName = null,
-        bool $hydrateEntityFromRequest = true
-    ) {
-        // TODO multiple PKS
-//        $pks = $entityRequest->getTableMap()->getPrimaryKeys();
-//        foreach ( as $index => $index) {
-//
-//        }
-        $this->fetchEntityFromParam(
-            'id',
-            $entityRequestClass,
-            $injectInActionParameterName,
-            $hydrateEntityFromRequest
-        );
+        $this->entities[$config->getParameterToInjectInto()] = $config;
+
+        return $this->add(new EntityMiddleware($this->getContainer(), $config));
     }
 
     /**
@@ -284,6 +293,28 @@ class Route extends \Slim\Route implements RouteInterface
         $this->actionMethod = $actionMethod;
 
         return $this;
+    }
+
+    /**
+     * @param string $paramName
+     *
+     * @return EntityFactoryConfig
+     */
+    public function getEntityConfig(string $paramName): EntityFactoryConfig
+    {
+        if (!$this->hasEntity($paramName)) {
+            throw new \RuntimeException("Unknown entity parameter");
+        }
+
+        return $this->entities[$paramName];
+    }
+
+    /**
+     * @return EntityFactoryConfig[]
+     */
+    public function getEntities(): array
+    {
+        return $this->entities;
     }
 
     public function getName()
@@ -335,6 +366,7 @@ class Route extends \Slim\Route implements RouteInterface
     }
 
     /**
+     * @deprecated will be remove when fetchCollection will be implemented
      * @return string
      */
     public function getRequestClass(): string
@@ -345,6 +377,7 @@ class Route extends \Slim\Route implements RouteInterface
     /**
      * @param string $requestClass
      *
+     * @deprecated
      * @return RouteInterface
      */
     public function setRequestClass(string $requestClass): RouteInterface
@@ -386,6 +419,14 @@ class Route extends \Slim\Route implements RouteInterface
     }
 
     /**
+     * @return HttpStatus[]
+     */
+    public function getStatuses(): array
+    {
+        return $this->statuses;
+    }
+
+    /**
      * @return string
      */
     public function getVerb(): string
@@ -407,6 +448,24 @@ class Route extends \Slim\Route implements RouteInterface
     }
 
     /**
+     * @param string $paramName
+     *
+     * @return bool
+     */
+    public function hasEntity(string $paramName): bool
+    {
+        return isset($this->entities[$paramName]);
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasEntities(): bool
+    {
+        return !empty($this->entities);
+    }
+
+    /**
      * @return bool
      */
     public function hasRoles(): bool
@@ -417,25 +476,9 @@ class Route extends \Slim\Route implements RouteInterface
     /**
      * @return bool
      */
-    public function isCreateEntity(): bool
-    {
-        return $this->createEntity;
-    }
-
-    /**
-     * @return bool
-     */
     public function isDeprecated(): bool
     {
         return $this->deprecated;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isFetchEntity(): bool
-    {
-        return $this->fetchEntity;
     }
 
     /**
@@ -449,6 +492,7 @@ class Route extends \Slim\Route implements RouteInterface
     /**
      * @param bool $forceFetch
      *
+     * @deprecated Not replaced yet
      * @return RouteInterface
      */
     public function makeCollection(bool $forceFetch = false): RouteInterface
@@ -462,10 +506,18 @@ class Route extends \Slim\Route implements RouteInterface
     /**
      * @param bool $forceFetch
      *
+     * @deprecated
+     * @see Route::fetchEntity()
+     * @see Route::createEntity()
      * @return RouteInterface
      */
     public function makeInstance(bool $forceFetch = false): RouteInterface
     {
+        if ($forceFetch || $this->getVerb() !== 'POST') {
+            $this->fetchEntity(EntityFactoryConfig::create());
+        } else {
+            $this->createEntity(EntityFactoryConfig::create());
+        }
         $this->instanceFromPk     = true;
         $this->instanceForceFetch = $forceFetch;
 
@@ -485,45 +537,55 @@ class Route extends \Slim\Route implements RouteInterface
     }
 
     /**
-     * @inheritdoc
+     * Set status code in case of success response
+     *
+     * @param int    $status
+     * @param string $description
+     *
+     * @return RouteInterface
+     *
      */
-    public function useRequest(bool $bool): RouteInterface
+    public function setSuccessStatus(int $status, string $description = ""): RouteInterface
     {
-        $this->useRequest = $bool;
+        $this->statuses[$status] = HttpStatus::create()
+            ->setStatus($status)
+            ->setDescription($description)
+            ->setMainSuccess(true);
 
-        return $this;
+        /**
+         * This middleware is an "AFTER" middleware, so add it first to be run last...
+         */
+        return $this->addFirst(new SuccessStatusMiddleware($status));
     }
 
     /**
-     * @param string      $entityRequestClass
-     * @param string|null $requestParameter
-     * @param string|null $injectInActionParameterName
-     * @param bool        $hydrateEntityFromRequest
+     * Add a Location header to the response
      *
-     * @return EntityFactoryConfig
+     * Can take a placeholder to replace a variable by an entity getter
+     * e.g.
+     * ```php
+     * '/resource/{id}'
+     * ```
+     * will be replaced by
+     * ```php
+     * '/resource/' . $entity->getId()
+     * ```
+     *
+     * @param string              $location
+     * @param EntityFactoryConfig $config
+     *
+     * @return RouteInterface
+     *
      */
-    private function buildEntityFactoryConfig(
-        string $entityRequestClass,
-        string $requestParameter = null,
-        string $injectInActionParameterName = null,
-        bool $hydrateEntityFromRequest = true
-    ): EntityFactoryConfig {
-
-        $config = new EntityFactoryConfig($this->getContainer());
-
-        if ($requestParameter) {
-            $config->setRequestParameter($requestParameter);
-        }
-
-        $config
-            ->setEntityRequest(new $entityRequestClass($this->getContainer()))
-            ->setParameterToInjectInto($injectInActionParameterName
-                ?: $this->nameOfInjectedParam)
-            ->setHydrateEntityFromRequest($hydrateEntityFromRequest
-                ?: $this->useRequest);
-
-        return $config;
+    public function setSuccessLocationHeader(string $location, EntityFactoryConfig $config): RouteInterface
+    {
+        return $this->addFirst(new SuccessHeaderLocationMiddleware($location, $config));
     }
+
+//    public function setPaginateHeaders()
+//    {
+//        return $this->addFirst(new SuccessHeaderLocationMiddleware($location, $config));
+//    }
 
     /**
      * @param mixed $value

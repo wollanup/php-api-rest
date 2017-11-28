@@ -8,13 +8,18 @@
 
 namespace Eukles\Entity;
 
-use Eukles\Container\ContainerInterface;
-use Eukles\Container\ContainerTrait;
 
 class EntityFactoryConfig
 {
 
-    use ContainerTrait;
+    const TYPE_FETCH = 'fetch';
+    const TYPE_CREATE = 'create';
+    /**
+     * Instance creation method
+     *
+     * @var array
+     */
+    protected static $types = [self::TYPE_CREATE, self::TYPE_FETCH];
     /**
      * Entity Request class used to instantiate and hydrate Entity
      *
@@ -26,7 +31,7 @@ class EntityFactoryConfig
      *
      * @var bool
      */
-    protected $hydrateEntityFromRequest = true;
+    protected $hydrateEntityFromRequest;
     /**
      * Name of parameter in Action method
      *
@@ -41,13 +46,19 @@ class EntityFactoryConfig
     protected $requestParameterName = "id";
 
     /**
-     * EntityFactoryConfig constructor.
-     *
-     * @param ContainerInterface $container
+     * @var string
      */
-    public function __construct(ContainerInterface $container)
+    protected $type;
+
+
+    /**
+     * Constructor wrapper
+     *
+     * @return EntityFactoryConfig
+     */
+    public static function create()
     {
-        $this->container = $container;
+        return new self();
     }
 
     /**
@@ -59,13 +70,13 @@ class EntityFactoryConfig
     }
 
     /**
-     * @param EntityRequestInterface $entityRequest
+     * @param EntityRequestInterface $entityRequestClass
      *
      * @return EntityFactoryConfig
      */
-    public function setEntityRequest(EntityRequestInterface $entityRequest
-    ): EntityFactoryConfig {
-        $this->entityRequest = $entityRequest;
+    public function setEntityRequest(EntityRequestInterface $entityRequestClass): EntityFactoryConfig
+    {
+        $this->entityRequest = $entityRequestClass;
 
         return $this;
     }
@@ -83,8 +94,8 @@ class EntityFactoryConfig
      *
      * @return EntityFactoryConfig
      */
-    public function setParameterToInjectInto(string $parameterToInjectInto
-    ): EntityFactoryConfig {
+    public function setParameterToInjectInto(string $parameterToInjectInto): EntityFactoryConfig
+    {
         $this->parameterToInjectInto = $parameterToInjectInto;
 
         return $this;
@@ -96,6 +107,39 @@ class EntityFactoryConfig
     public function getRequestParameterName(): string
     {
         return $this->requestParameterName;
+    }
+
+    /**
+     * @param string $requestParameterName
+     *
+     * @return EntityFactoryConfig
+     */
+    public function setRequestParameterName(string $requestParameterName): EntityFactoryConfig
+    {
+        $this->requestParameterName = $requestParameterName;
+
+        return $this;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getType(): string
+    {
+        return $this->type;
+    }
+
+    /**
+     * @param string $type
+     *
+     * @return EntityFactoryConfig
+     */
+    public function setType(string $type): EntityFactoryConfig
+    {
+        $this->type = $type;
+
+        return $this;
     }
 
     /**
@@ -111,22 +155,65 @@ class EntityFactoryConfig
      *
      * @return EntityFactoryConfig
      */
-    public function setHydrateEntityFromRequest(bool $hydrateEntityFromRequest
-    ): EntityFactoryConfig {
+    public function setHydrateEntityFromRequest(bool $hydrateEntityFromRequest): EntityFactoryConfig
+    {
         $this->hydrateEntityFromRequest = $hydrateEntityFromRequest;
 
         return $this;
     }
 
     /**
-     * @param string $requestParameterName
-     *
-     * @return EntityFactoryConfig
+     * @return bool
      */
-    public function setRequestParameter(string $requestParameterName
-    ): EntityFactoryConfig {
-        $this->requestParameterName = $requestParameterName;
+    public function isTypeCreate(): bool
+    {
+        return $this->type === self::TYPE_CREATE;
+    }
 
-        return $this;
+    /**
+     * @return bool
+     */
+    public function isTypeFetch(): bool
+    {
+        return $this->type === self::TYPE_FETCH;
+    }
+
+    /**
+     * @return bool
+     */
+    public function issetEntityRequest(): bool
+    {
+        return null !== $this->entityRequest;
+    }
+
+    public function issetHydrateEntityFromRequest(): bool
+    {
+        return $this->hydrateEntityFromRequest !== null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function issetParameterToInjectInto(): bool
+    {
+        return $this->parameterToInjectInto !== null;
+    }
+
+    public function validate()
+    {
+        if (!$this->type || !in_array($this->type, self::$types)) {
+            throw new EntityFactoryConfigException('Config must have an EntityRequest class');
+        }
+        if ($this->hydrateEntityFromRequest === null) {
+            throw new EntityFactoryConfigException('Config must know if entity will be hydrated with request params');
+        }
+        if (!$this->entityRequest) {
+            throw new EntityFactoryConfigException('Config must have an EntityRequest class');
+        }
+        if (!$this->parameterToInjectInto) {
+            throw new EntityFactoryConfigException(
+                'Config must have a parameter name for inject entity in action method'
+            );
+        }
     }
 }

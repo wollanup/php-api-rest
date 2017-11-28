@@ -24,6 +24,12 @@ interface EntityRequestInterface
     public function __construct(ContainerInterface $c);
 
     /**
+     * @param \Psr\Container\ContainerInterface|ContainerInterface $c
+     *
+     * @return mixed
+     */
+    public function setContainer(\Psr\Container\ContainerInterface $c);
+    /**
      * Set state of the object after request data hydration
      *
      * @param ActiveRecordInterface $obj
@@ -71,10 +77,7 @@ interface EntityRequestInterface
      *
      * @return array
      */
-    public function getAllowedDataFromRequest(
-        array $requestParams,
-        $httpMethod
-    );
+    public function getAllowedDataFromRequest(array $requestParams, $httpMethod);
 
     /**
      * @return ContainerInterface
@@ -224,4 +227,9 @@ interface EntityRequestInterface
      * @return EntityRequestInterface
      */
     public function setPrimaryKey($pk);
+
+    /**
+     * @return ActiveRecordInterface|string
+     */
+    public function getActiveRecordClassName();
 }

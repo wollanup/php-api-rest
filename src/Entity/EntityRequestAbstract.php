@@ -3,6 +3,7 @@
 namespace Eukles\Entity;
 
 use Eukles\Container\ContainerInterface;
+use Eukles\Container\ContainerTrait;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\ActiveRecord\ActiveRecordInterface;
 use Propel\Runtime\Map\Exception\RelationNotFoundException;
@@ -16,11 +17,8 @@ use Propel\Runtime\Map\TableMap;
  */
 abstract class EntityRequestAbstract implements EntityRequestInterface
 {
-    
-    /**
-     * @var ContainerInterface
-     */
-    protected $container;
+
+    use ContainerTrait;
     /**
      * @var array
      */
@@ -41,7 +39,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
      * @var bool
      */
     protected $relationsBuilt = false;
-    
+
     /**
      * @inheritdoc
      */
@@ -49,12 +47,12 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     {
         $this->container = $c;
     }
-    
+
     /**
      * @return string
      */
     abstract public function getActionClassName();
-    
+
     /**
      * All properties of ActiveRecord
      *
@@ -62,7 +60,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
      * @throws \Propel\Runtime\Exception\PropelException
      */
     abstract protected function getAllProperties();
-    
+
     /**
      * Set state of the object after request data hydration
      *
@@ -72,7 +70,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     public function afterCreate(ActiveRecordInterface $obj)
     {
     }
-    
+
     /**
      * Set state of the object after request data hydration
      *
@@ -82,7 +80,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     public function afterFetch(ActiveRecordInterface $obj)
     {
     }
-    
+
     /**
      * Set state of the object before request data hydration
      *
@@ -92,7 +90,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     public function beforeCreate(ActiveRecordInterface $obj)
     {
     }
-    
+
     /**
      * Set state of the object before request data hydration
      *
@@ -105,7 +103,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     {
         return $query;
     }
-    
+
     /**
      * None, all or partial list of properties
      *
@@ -115,7 +113,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     {
         return $this->getWritableProperties();
     }
-    
+
     /**
      * None, all or partial list of properties
      *
@@ -125,7 +123,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     {
         return $this->getWritableProperties();
     }
-    
+
     /**
      * None, all or partial list of properties
      *
@@ -135,7 +133,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     {
         return $this->getAllProperties();
     }
-    
+
     /**
      * Hydrates an ActiveRecord with filtered Request params
      *
@@ -153,7 +151,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
         } else {
             return [];
         }
-        
+
         $data = [];
         if (false === empty($properties)) {
             foreach ($properties as $property) {
@@ -163,18 +161,10 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
                 }
             }
         }
-        
+
         return $data;
     }
-    
-    /**
-     * @return ContainerInterface
-     */
-    final public function getContainer()
-    {
-        return $this->container;
-    }
-    
+
     /**
      * None, all or partial list of properties
      *
@@ -187,10 +177,10 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
         if (null === $this->exposedProperties) {
             $this->exposedProperties = array_diff($this->getVisibleFields(), $this->getHiddenFieldsAndRelations());
         }
-        
+
         return $this->exposedProperties;
     }
-    
+
     /**
      * None, all or partial list of relations
      *
@@ -203,10 +193,10 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
         if (null === $this->exposedRelations) {
             $this->exposedRelations = array_diff($this->getRelationsNames(), $this->getHiddenFieldsAndRelations());
         }
-        
+
         return $this->exposedRelations;
     }
-    
+
     /**
      * @return int|string
      */
@@ -214,7 +204,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     {
         return $this->pk;
     }
-    
+
     /**
      * @inheritdoc
      */
@@ -223,10 +213,10 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
         if (!array_key_exists($name, $this->getRelations())) {
             throw new RelationNotFoundException(sprintf('Calling getRelation() on an unknown relation: %s.', $name));
         }
-        
+
         return $this->relations[$name];
     }
-    
+
     /**
      * @inheritdoc
      */
@@ -234,7 +224,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     {
         return $this->getRelation($name)->getType();
     }
-    
+
     /**
      * Returns names of relations
      *
@@ -249,10 +239,10 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
             $this->buildRelations($tableMap);
             $this->relationsBuilt = true;
         }
-        
+
         return $this->relations;
     }
-    
+
     /**
      * @inheritdoc
      */
@@ -260,7 +250,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     {
         return array_keys($this->getRelations());
     }
-    
+
     /**
      * @inheritdoc
      */
@@ -268,7 +258,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     {
         return empty($this->getRelations()) === false;
     }
-    
+
     /**
      * @inheritdoc
      */
@@ -276,7 +266,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     {
         return in_array($this->getRelationType($name), [RelationMap::ONE_TO_MANY, RelationMap::MANY_TO_MANY]);
     }
-    
+
     /**
      * @inheritdoc
      */
@@ -284,7 +274,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     {
         return array_key_exists($name, $this->getRelations());
     }
-    
+
     /**
      * @inheritdoc
      */
@@ -292,7 +282,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     {
         return $this->getRelation($name)->getType() === RelationMap::MANY_TO_ONE;
     }
-    
+
     /**
      * @inheritdoc
      */
@@ -300,7 +290,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     {
         return $this->getRelation($name)->getType() === RelationMap::ONE_TO_MANY;
     }
-    
+
     /**
      * @inheritdoc
      */
@@ -308,17 +298,17 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     {
         return $this->getRelation($name)->getType() === RelationMap::ONE_TO_ONE;
     }
-    
+
     /**
      * @inheritdoc
      */
     final public function setPrimaryKey($pk)
     {
         $this->pk = $pk;
-        
+
         return $this;
     }
-    
+
     /**
      * @param TableMap $tableMap
      */
@@ -326,7 +316,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     {
         # init to array to don't pass tests on null
         $this->relations = [];
-        
+
         foreach ($tableMap->getRelations() as $relation) {
             if ($relation->getType() === RelationMap::ONE_TO_MANY) {
                 $this->relations[$relation->getPluralName()] = $relation;
@@ -335,7 +325,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
             }
         }
     }
-    
+
     /**
      * None, all or partial list of properties
      *
@@ -345,7 +335,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     {
         return [];
     }
-    
+
     /**
      * None, all or partial list of fields
      *

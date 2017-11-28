@@ -30,6 +30,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Container as SlimContainer;
 use Slim\Http\Request;
+use Slim\Http\Response;
 
 /**
  * Class Container
@@ -108,10 +109,14 @@ class Container extends SlimContainer implements ContainerInterface
         # Use your own implementation of RequestQueryModifierInterface
         if (!isset($values[self::RESPONSE_FORMATTER])) {
             $this[self::RESPONSE_FORMATTER] = function () {
-                return function (ResponseInterface $response, $result) {
+                return function (Response $response, $result) {
                     if ($response->getBody()->isWritable()) {
-                        $response->getBody()
-                            ->write(is_array($result) ? json_encode($result) : $result);
+                        if (is_array($result)) {
+                            return $response->withJson($result);
+                        }
+                        if (is_scalar($result) && !empty($result)) {
+                            return $response->getBody()->write(is_array($result) ? json_encode($result) : $result);
+                        }
                     }
 
                     return $response;
@@ -215,16 +220,6 @@ class Container extends SlimContainer implements ContainerInterface
     }
 
     /**
-     * Result is populated in ActionStrategy and becomes available in middlewares post-app
-     *
-     * @return mixed
-     */
-    public function getResult()
-    {
-        return $this[self::RESULT];
-    }
-
-    /**
      * @return RouterInterface
      */
     public function getRouter(): RouterInterface
@@ -238,16 +233,5 @@ class Container extends SlimContainer implements ContainerInterface
     public function getRoutesClasses(): RoutesClassesInterface
     {
         return $this[self::ROUTES_CLASSES];
-    }
-
-    /**
-     * @param $result
-     *
-     * @return void
-     */
-    public function setResult($result)
-    {
-        unset($this[self::RESULT]);
-        $this[self::RESULT] = $result;
     }
 }

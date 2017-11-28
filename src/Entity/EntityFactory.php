@@ -12,6 +12,7 @@ use Eukles\Action\ActionInterface;
 use Eukles\Util\PksFinder;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Http\Response;
 
 class EntityFactory implements EntityFactoryInterface
 {
@@ -45,25 +46,19 @@ class EntityFactory implements EntityFactoryInterface
             $requestParams = $request->getQueryParams();
             $postParams    = $request->getParsedBody();
             if ($postParams) {
-                $requestParams = array_merge($requestParams,
-                    (array)$postParams);
+                $requestParams = array_merge($requestParams, (array)$postParams);
             }
 
             /** @noinspection PhpUndefinedMethodInspection */
-            $obj->fromArray($entityRequest->getAllowedDataFromRequest($requestParams,
-                $request->getMethod()));
+            $obj->fromArray($entityRequest->getAllowedDataFromRequest($requestParams, $request->getMethod()));
         }
 
         # Execute afterCreate hook, which can alter record
         $entityRequest->afterCreate($obj);
 
-        /** @var $request ServerRequestInterface */
-        $newRequest = $request->withAttribute(
-            $config->getParameterToInjectInto(), $obj
-        );
-        $response   = $next($newRequest, $response);
-
-        return $response;
+        $request = $request->withAttribute($config->getParameterToInjectInto(), $obj);
+        /** @var Response $response */
+        return $next($request, $response);
     }
 
     /**
@@ -100,8 +95,7 @@ class EntityFactory implements EntityFactoryInterface
         # Now get the primary key in its final form
         $pk = $entityRequest->getPrimaryKey();
         if (null === $pk) {
-            $handler = $entityRequest->getContainer()
-                ->getEntityRequestErrorHandler();
+            $handler = $entityRequest->getContainer()->getEntityRequestErrorHandler();
 
             return $handler->primaryKeyNotFound($entityRequest, $request,
                 $response);
@@ -111,11 +105,9 @@ class EntityFactory implements EntityFactoryInterface
         $obj = $query->findPk($pk);
 
         if ($obj === null) {
-            $handler = $entityRequest->getContainer()
-                ->getEntityRequestErrorHandler();
+            $handler = $entityRequest->getContainer()->getEntityRequestErrorHandler();
 
-            return $handler->entityNotFound($entityRequest, $request,
-                $response);
+            return $handler->entityNotFound($entityRequest, $request, $response);
         }
 
         # Get request params
@@ -127,19 +119,15 @@ class EntityFactory implements EntityFactoryInterface
             }
 
             # Then, alter object with allowed properties
-            $obj->fromArray($entityRequest->getAllowedDataFromRequest($params,
-                $request->getMethod()));
+            $obj->fromArray($entityRequest->getAllowedDataFromRequest($params, $request->getMethod()));
         }
 
         # Then, execute afterFetch hook, which can alter the object
         $entityRequest->afterFetch($obj);
 
-        $newRequest = $request->withAttribute(
-            $config->getParameterToInjectInto(), $obj
-        );
-        $response   = $next($newRequest, $response);
+        $request = $request->withAttribute($config->getParameterToInjectInto(), $obj);
 
-        return $response;
+        return $next($request, $response);
     }
 
     /**
@@ -203,10 +191,9 @@ class EntityFactory implements EntityFactoryInterface
             $nameOfParameterToAdd
                 = $entityRequest->getNameOfParameterToAdd(true);
         }
-        $newRequest = $request->withAttribute($nameOfParameterToAdd, $col);
-        $response   = $next($newRequest, $response);
+        $request = $request->withAttribute($nameOfParameterToAdd, $col);
 
-        return $response;
+        return $next($request, $response);
     }
 
     /**

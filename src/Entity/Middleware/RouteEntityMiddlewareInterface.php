@@ -8,18 +8,21 @@
 
 namespace Eukles\Entity\Middleware;
 
+use Eukles\Container\ContainerInterface;
 use Eukles\Entity\EntityFactoryConfig;
+use Eukles\Service\Router\Middleware\RouteMiddlewareInterface;
 use Psr\Http\Message\ResponseInterface;
 
-interface RouteEntityMiddlewareInterface
+interface RouteEntityMiddlewareInterface extends RouteMiddlewareInterface
 {
 
     /**
      * RouteEntityMiddleware constructor.
      *
+     * @param ContainerInterface  $container
      * @param EntityFactoryConfig $config
      */
-    public function __construct(EntityFactoryConfig $config);
+    public function __construct(ContainerInterface $container, EntityFactoryConfig $config);
 
     /**
      * @param $request
