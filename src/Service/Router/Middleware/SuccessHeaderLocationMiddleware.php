@@ -31,11 +31,26 @@ class SuccessHeaderLocationMiddleware
      * @var string
      */
     protected $location;
+    /**
+     * Redirection status
+     *
+     * Valid HTTP statuses with Location header are :
+     *
+     * - 201 - to give the location of a newly created resource
+     * - 202 - accepted, when its still being processed
+     * - 3xx - for redirection purposes.
+     *
+     * @var int
+     */
+    protected $status = 302;
 
-    public function __construct(string $location, EntityFactoryConfig $config = null)
+    public function __construct(string $location, EntityFactoryConfig $config = null, int $status = null)
     {
         $this->location = $location;
         $this->config   = $config;
+        if ($status) {
+            $this->status = $status;
+        }
     }
 
     /**
@@ -54,13 +69,16 @@ class SuccessHeaderLocationMiddleware
             return $response;
         }
 
+        # Change HTTP status of Response
+        $response = $response->withStatus($this->status);
+
+        # Build complete URL
         /** @var Uri $uri */
         $uri  = $request->getUri();
         $base = $uri->getScheme() . '://';
         $base .= $uri->getHost();
         $base .= $uri->getPort() ? ':' . $uri->getPort() : "";
         $base .= $uri->getBasePath();
-
         $this->location = $base . $this->location;
 
         if (null === $this->config) {

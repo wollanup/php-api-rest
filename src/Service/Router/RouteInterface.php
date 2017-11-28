@@ -267,10 +267,15 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
      * @param string              $location
      * @param EntityFactoryConfig $config
      *
-     * @return RouteInterface
+     * @param int                 $status
      *
+     * @return RouteInterface
      */
-    public function setSuccessLocationHeader(string $location, EntityFactoryConfig $config): RouteInterface;
+    public function setSuccessLocationHeader(
+        string $location,
+        EntityFactoryConfig $config,
+        int $status = 302
+    ): RouteInterface;
 
     /**
      * Set status code in case of success response
