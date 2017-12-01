@@ -16,6 +16,7 @@ use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\Exception\UnknownColumnException;
 use Propel\Runtime\ActiveQuery\Exception\UnknownModelException;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Class SortModifier
@@ -27,6 +28,38 @@ class SortModifier extends ModifierBase
 
     const NAME = "sort";
     const DEFAULT_DIRECTION = Criteria::DESC;
+
+    public function setModifierFromRequest(ServerRequestInterface $request)
+    {
+        $this->modifiers = [];
+
+        $modifiers = $this->getParam($request, $this->getName());
+
+        if (empty($modifiers)) {
+            return;
+        }
+
+        # Handle non JSON string, this is what we need !
+        if (null === json_decode($modifiers)) {
+            $sorters = explode(',', $modifiers);
+            foreach ($sorters as $sorter) {
+                $direction = Criteria::ASC;
+                if (strpos($sorter, '+') === 0) {
+                    $sorter = substr($sorter, 1);
+                } elseif (strpos($sorter, '-') === 0) {
+                    $sorter    = substr($sorter, 1);
+                    $direction = Criteria::DESC;
+                }
+
+                $this->modifiers[] = [
+                    'property'  => $sorter,
+                    'direction' => $direction,
+                ];
+            }
+        } else {
+            parent::setModifierFromRequest($request);
+        }
+    }
 
     /**
      * Return the name of the modifier
