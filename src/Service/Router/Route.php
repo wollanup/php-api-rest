@@ -574,12 +574,17 @@ class Route extends \Slim\Route implements RouteInterface
      * @param string              $location
      * @param EntityFactoryConfig $config
      *
-     * @return RouteInterface
+     * @param int                 $status
      *
+     * @return RouteInterface
      */
-    public function setSuccessLocationHeader(string $location, EntityFactoryConfig $config): RouteInterface
+    public function setSuccessLocationHeader(
+        string $location,
+        EntityFactoryConfig $config,
+        int $status = 302
+    ): RouteInterface
     {
-        return $this->addFirst(new SuccessHeaderLocationMiddleware($location, $config));
+        return $this->addFirst(new SuccessHeaderLocationMiddleware($location, $config, $status));
     }
 
 //    public function setPaginateHeaders()

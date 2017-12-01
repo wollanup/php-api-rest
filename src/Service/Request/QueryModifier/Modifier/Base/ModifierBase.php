@@ -153,7 +153,6 @@ abstract class ModifierBase
     /**
      * @param ServerRequestInterface $request
      *
-     * @return $this
      */
     public function setModifierFromRequest(ServerRequestInterface $request)
     {
