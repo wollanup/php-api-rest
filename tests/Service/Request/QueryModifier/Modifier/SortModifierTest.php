@@ -82,6 +82,25 @@ class SortModifierTest extends TestCase
         $this->assertEquals('modifier_test.column2 ASC', $mc->getOrderByColumns()[1]);
     }
 
+    public function testSetModifierFromRequest()
+    {
+        $r = new Request(["sort" => ["property" => "name"], "foo" => "bar"]);
+        $m = new SortModifier($r);
+        $m->setModifierFromRequest($r);
+        $this->assertSame(["property" => "name"], $m->getModifier('name'));
+
+        $r = new Request(["sort" => "-name", "foo" => "bar"]);
+        $m = new SortModifier($r);
+        $m->setModifierFromRequest($r);
+        $this->assertSame(["property" => "name", "direction" => "DESC"], $m->getModifier('name'));
+
+        $r = new Request(["sort" => "-name,foo"]);
+        $m = new SortModifier($r);
+        $m->setModifierFromRequest($r);
+        $this->assertSame(["property" => "name", "direction" => "DESC"], $m->getModifier('name'));
+        $this->assertSame(["property" => "foo", "direction" => "ASC"], $m->getModifier('foo'));
+    }
+
     public function testApplyOnInexistentField()
     {
         $m  = new SortModifier(new Request(["sort" => json_encode(["property" => "notFound"])]));
