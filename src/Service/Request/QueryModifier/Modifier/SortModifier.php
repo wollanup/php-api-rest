@@ -40,7 +40,7 @@ class SortModifier extends ModifierBase
         }
 
         # Handle non JSON string, this is what we need !
-        if (null === json_decode($modifiers)) {
+        if (!is_string($modifiers) || null === json_decode($modifiers)) {
             $sorters = explode(',', $modifiers);
             foreach ($sorters as $sorter) {
                 $direction = Criteria::ASC;
