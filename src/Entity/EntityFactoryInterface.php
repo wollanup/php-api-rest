@@ -2,6 +2,7 @@
 
 namespace Eukles\Entity;
 
+use Eukles\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -12,6 +13,13 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 interface EntityFactoryInterface
 {
+
+    /**
+     * EntityFactoryInterface constructor.
+     *
+     * @param ContainerInterface $c
+     */
+    public function __construct(ContainerInterface $c);
 
     /**
      * Create a new instance of activeRecord and add it to Request attributes

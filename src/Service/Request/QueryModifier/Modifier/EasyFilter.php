@@ -12,7 +12,7 @@ use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Psr\Http\Message\ServerRequestInterface;
 
-class EasySorter
+class EasyFilter
 {
 
     /**

@@ -74,8 +74,8 @@ class Container extends SlimContainer implements ContainerInterface
         # Default Request Query Modifier (Do nothing),
         # Use your own implementation of RequestQueryModifierInterface
         if (!isset($values[self::ENTITY_FACTORY])) {
-            $this[self::ENTITY_FACTORY] = function () {
-                return new EntityFactory();
+            $this[self::ENTITY_FACTORY] = function (ContainerInterface $c) {
+                return new EntityFactory($c);
             };
         }
 
