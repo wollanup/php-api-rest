@@ -32,6 +32,11 @@ class ActionTest extends TestCase
 
     public function testResponse()
     {
+        $c = new \Slim\Container(["response" => function () { return new \Slim\Http\Response(); }]);
+        /** @var ActionInterface $a */
+        $a = $this->getMockForAbstractClass(ActionAbstract::class, [$c]);
+        $this->assertSame($c["response"], $a->getResponse());
+
         /** @var ActionInterface $a */
         $a = $this->getMockForAbstractClass(ActionAbstract::class, [], "", false);
         $r = new Response();

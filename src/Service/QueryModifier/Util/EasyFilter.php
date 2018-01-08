@@ -14,6 +14,11 @@ class EasyFilter extends EasyUtil
 {
 
     /**
+     * @var mixed
+     */
+    protected $value;
+
+    /**
      * @param $value
      *
      * @return array
@@ -35,11 +40,24 @@ class EasyFilter extends EasyUtil
         # Handle LIKE operator when % is present in value
         if ($firstChar === '%' || strpos($value, '%') === strlen($value) - 1) {
             $operator = $negate ? Criteria::NOT_LIKE : Criteria::LIKE;
-        }# Handle IN operator when comma is present
-        elseif (strpos($value, ',') !== false) {
-            # IN operator is handled by propel
-            $operator = $negate ? Criteria::NOT_IN : null;
-            $value    = explode(',', $value);
+        }# Handle min/max operator when [ is present
+        elseif ($firstChar === '[') {
+            $operator = null;
+            $value    = substr($value, 1);
+            $lastChar = substr($value, -1);
+            if ($lastChar === ']') {
+                $value = substr($value, 0, -1);
+            }
+            $value = explode(',', $value);
+            if (empty($value[0])) {
+                $value = null;
+            } else {
+                $valueTmp = ['min' => $value[0]];
+                if (!empty($value[1])) {
+                    $valueTmp['max'] = $value[1];
+                }
+                $value = $valueTmp;
+            }
         } # Handle > operators
         elseif ($firstChar === '>') {
             $value    = substr($value, 1);
@@ -56,12 +74,33 @@ class EasyFilter extends EasyUtil
                 $value    = substr($value, 1);
                 $operator = Criteria::LESS_EQUAL;
             }
+        } elseif ($firstChar === '"' || $firstChar === "'") {
+            $value = trim($value, "\"'");
+        } # Handle IN operator when comma is present
+        elseif (strpos($value, ',') !== false) {
+            # IN operator is handled by propel
+            $operator = $negate ? Criteria::NOT_IN : null;
+            $value    = explode(',', $value);
         }
 
-        // TODO handle [a,b] and ]a,b[
-        // TODO handle "a,b" as a string and not as an array of [a,b]
-
         return [$operator, $value];
+    }
+
+    /**
+     * @param $property
+     * @param $value
+     *
+     * @return bool
+     */
+    public function apply($property, $value): bool
+    {
+        $this->value    = $value;
+        $this->property = $property;
+        if ($this->isAutoUseRelationQuery()) {
+            return $this->useRelationQuery();
+        } else {
+            return $this->filter();
+        }
     }
 
     /**
@@ -77,7 +116,7 @@ class EasyFilter extends EasyUtil
 
         list($value, $operator) = $this->build($this->value);
 
-        call_user_func([$this->query, $method], $value, $operator);
+        $this->query = call_user_func([$this->query, $method], $value, $operator);
 
         return true;
     }

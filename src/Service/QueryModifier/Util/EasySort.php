@@ -9,59 +9,43 @@
 namespace Eukles\Service\QueryModifier\Util;
 
 use Propel\Runtime\ActiveQuery\Criteria;
+use Propel\Runtime\ActiveQuery\Exception\UnknownColumnException;
+use Propel\Runtime\ActiveQuery\Exception\UnknownModelException;
 
 class EasySort extends EasyUtil
 {
 
     /**
-     * @param $value
+     * @var string
+     */
+    protected $direction;
+
+    /**
+     * @param $property
      *
      * @return array
      */
-    public static function build($value)
+    public static function build($property)
     {
-        # Use default operator
-        $operator = null;
-
-        # Handle negate operator
-        $firstChar = mb_substr($value, 0, 1);
-        $negate    = $firstChar === '!';
-        if ($negate) {
-            $value     = substr($value, 1);
-            $operator  = Criteria::NOT_EQUAL;
-            $firstChar = mb_substr($value, 0, 1);
+        $direction = Criteria::ASC;
+        if (strpos($property, '+') === 0) {
+            $property = substr($property, 1);
+        } elseif (strpos($property, '-') === 0) {
+            $property  = substr($property, 1);
+            $direction = Criteria::DESC;
         }
 
-        # Handle LIKE operator when % is present in value
-        if ($firstChar === '%' || strpos($value, '%') === strlen($value) - 1) {
-            $operator = $negate ? Criteria::NOT_LIKE : Criteria::LIKE;
-        }# Handle IN operator when comma is present
-        elseif (strpos($value, ',') !== false) {
-            # IN operator is handled by propel
-            $operator = $negate ? Criteria::NOT_IN : null;
-            $value    = explode(',', $value);
-        } # Handle > operators
-        elseif ($firstChar === '>') {
-            $value    = substr($value, 1);
-            $operator = Criteria::GREATER_THAN;
-            if (mb_substr($value, 0, 1) === '=') {
-                $value    = substr($value, 1);
-                $operator = Criteria::GREATER_EQUAL;
-            }
-        } # Handle < operators
-        elseif ($firstChar === '<') {
-            $value    = substr($value, 1);
-            $operator = Criteria::LESS_THAN;
-            if (strpos($value, '=') === 0) {
-                $value    = substr($value, 1);
-                $operator = Criteria::LESS_EQUAL;
-            }
+        return [$property, $direction];
+    }
+
+    public function apply($sort): bool
+    {
+        list($this->property, $this->direction) = self::build($sort);
+        if ($this->isAutoUseRelationQuery()) {
+            return $this->useRelationQuery();
+        } else {
+            return $this->filter();
         }
-
-        // TODO handle [a,b] and ]a,b[
-        // TODO handle "a,b" as a string and not as an array of [a,b]
-
-        return [$operator, $value];
     }
 
     /**
@@ -69,15 +53,14 @@ class EasySort extends EasyUtil
      */
     protected function filter()
     {
-        # Determine if method is callable in Query class
-        $method = 'filterBy' . ucfirst($this->property);
-        if (!method_exists($this->query, $method)) {
+        # Try to call method in Query class
+        try {
+            $this->query = $this->query->orderBy(ucfirst($this->property), $this->direction);
+        } catch (UnknownColumnException $e) {
+            return false;
+        } catch (UnknownModelException $e) {
             return false;
         }
-
-        list($value, $operator) = $this->build($this->value);
-
-        call_user_func([$this->query, $method], $value, $operator);
 
         return true;
     }

@@ -30,7 +30,6 @@ abstract class EasyUtil
      * @var array
      */
     protected $relations = [];
-    protected $value;
 
     /**
      * EasyFilter constructor.
@@ -44,12 +43,6 @@ abstract class EasyUtil
 
     abstract protected function filter();
 
-    /**
-     * @param $value
-     *
-     * @return array
-     */
-    abstract public static function build($value);
 
     /**
      * @param ModelCriteria $query
@@ -62,20 +55,11 @@ abstract class EasyUtil
     }
 
     /**
-     * @param $property
-     * @param $value
-     *
-     * @return bool
+     * @return ModelCriteria
      */
-    public function apply($property, $value): bool
+    public function getQuery(): ModelCriteria
     {
-        $this->value    = $value;
-        $this->property = $property;
-        if ($this->isAutoUseRelationQuery()) {
-            return $this->useRelationQuery();
-        } else {
-            return $this->filter();
-        }
+        return $this->query;
     }
 
     /**
@@ -89,7 +73,7 @@ abstract class EasyUtil
     /**
      * @param bool $autoUseRelationQuery
      *
-     * @return EasyUtil
+     * @return static
      */
     public function setAutoUseRelationQuery(bool $autoUseRelationQuery): EasyUtil
     {
@@ -101,7 +85,7 @@ abstract class EasyUtil
     /**
      * @return bool
      */
-    private function useRelationQuery()
+    protected function useRelationQuery()
     {
         $map            = explode(self::RELATION_SEP, $this->property);
         $this->property = array_pop($map);
@@ -111,14 +95,15 @@ abstract class EasyUtil
             foreach ($this->relations as $relation) {
                 $method = sprintf('use%sQuery', ucfirst($relation));
                 if (!method_exists($this->query, $method)) {
-                    throw new \RuntimeException("Relation '{$relation}' not found");
+                    return false;
                 }
+                $this->query = call_user_func([$this->query, $method]);
             }
 
             $result = $this->filter();
 
             foreach ($this->relations as $null) {
-                $this->query->endUse();
+                $this->query = $this->query->endUse();
             }
         } else {
             return $this->filter();

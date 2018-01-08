@@ -33,7 +33,7 @@ class Config extends Dot implements ConfigInterface
      */
     public function isEnvironment($environment)
     {
-        return in_array($this->get('app.environment'), (array)$environment);
+        return strtolower($this->get('app.environment')) === strtolower($environment);
     }
 
     /**
