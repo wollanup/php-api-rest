@@ -9,6 +9,8 @@
 namespace Eukles\Entity;
 
 use Eukles\Action\ActionInterface;
+use Eukles\Container\ContainerInterface;
+use Eukles\Container\ContainerTrait;
 use Eukles\Util\PksFinder;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -16,6 +18,18 @@ use Slim\Http\Response;
 
 class EntityFactory implements EntityFactoryInterface
 {
+
+    use ContainerTrait;
+
+    /**
+     * EntityFactoryInterface constructor.
+     *
+     * @param ContainerInterface $c
+     */
+    public function __construct(ContainerInterface $c)
+    {
+        $this->container = $c;
+    }
 
     /**
      * Create a new instance of activeRecord and add it to Request attributes
@@ -33,7 +47,7 @@ class EntityFactory implements EntityFactoryInterface
         ResponseInterface $response,
         callable $next
     ): ResponseInterface {
-        $entityRequest = $config->getEntityRequest();
+        $entityRequest = $config->createEntityRequest($this->container);
 
         # make a new empty record
         $obj = $entityRequest->instantiateActiveRecord();
@@ -77,13 +91,11 @@ class EntityFactory implements EntityFactoryInterface
         ResponseInterface $response,
         callable $next
     ): ResponseInterface {
-        $entityRequest = $config->getEntityRequest();
+        $entityRequest = $config->createEntityRequest($this->container);
 
         # First, we try to determine PK in request path (most common case)
         if (isset($request->getAttribute('routeInfo')[2][$config->getRequestParameterName()])) {
-            $config->getEntityRequest()->setPrimaryKey(
-                $request->getAttribute('routeInfo')[2][$config->getRequestParameterName()]
-            );
+            $entityRequest->setPrimaryKey($request->getAttribute('routeInfo')[2][$config->getRequestParameterName()]);
         }
 
         # Next, we create the query (ModelCriteria), based on Action class (which can alter the query)

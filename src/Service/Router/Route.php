@@ -198,11 +198,13 @@ class Route extends \Slim\Route implements RouteInterface
         }
         # Auto add EntityRequest if not specified
         if (!$config->issetEntityRequest()) {
-            $config->setEntityRequest(new $this->requestClass($this->getContainer()));
+            $config->setEntityRequest($this->requestClass);
         }
         # Auto determine name of parameter to add
         if (!$config->issetParameterToInjectInto()) {
-            $config->setParameterToInjectInto($config->getEntityRequest()->getNameOfParameterToAdd(false));
+            $config->setParameterToInjectInto(
+                $config->createEntityRequest($this->container)->getNameOfParameterToAdd(false)
+            );
         }
 
         # Make sure config is clean
@@ -228,6 +230,7 @@ class Route extends \Slim\Route implements RouteInterface
      * @param EntityFactoryConfig $config
      *
      * @return RouteInterface
+     * @throws \Eukles\Entity\EntityFactoryConfigException
      */
     public function fetchEntity(EntityFactoryConfig $config): RouteInterface
     {
@@ -240,11 +243,13 @@ class Route extends \Slim\Route implements RouteInterface
         }
         # Auto add EntityRequest if not specified
         if (!$config->issetEntityRequest()) {
-            $config->setEntityRequest(new $this->requestClass($this->getContainer()));
+            $config->setEntityRequest($this->requestClass);
         }
         # Auto determine name of parameter to add
         if (!$config->issetParameterToInjectInto()) {
-            $config->setParameterToInjectInto($config->getEntityRequest()->getNameOfParameterToAdd(false));
+            $config->setParameterToInjectInto(
+                $config->createEntityRequest($this->container)->getNameOfParameterToAdd(false)
+            );
         }
 
         # Make sure config is clean

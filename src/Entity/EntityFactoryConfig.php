@@ -8,6 +8,7 @@
 
 namespace Eukles\Entity;
 
+use Eukles\Container\ContainerInterface;
 
 class EntityFactoryConfig
 {
@@ -44,12 +45,10 @@ class EntityFactoryConfig
      * @var string
      */
     protected $requestParameterName = "id";
-
     /**
      * @var string
      */
     protected $type;
-
 
     /**
      * Constructor wrapper
@@ -62,19 +61,29 @@ class EntityFactoryConfig
     }
 
     /**
-     * @return EntityRequestInterface
+     * @return string
      */
-    public function getEntityRequest(): EntityRequestInterface
+    public function getEntityRequest(): string
     {
         return $this->entityRequest;
     }
 
     /**
-     * @param EntityRequestInterface $entityRequestClass
+     * @param ContainerInterface $container
+     *
+     * @return EntityRequestInterface
+     */
+    public function createEntityRequest(ContainerInterface $container): EntityRequestInterface
+    {
+        return new $this->entityRequest($container);
+    }
+
+    /**
+     * @param string $entityRequestClass Name
      *
      * @return EntityFactoryConfig
      */
-    public function setEntityRequest(EntityRequestInterface $entityRequestClass): EntityFactoryConfig
+    public function setEntityRequest(string $entityRequestClass): EntityFactoryConfig
     {
         $this->entityRequest = $entityRequestClass;
 
@@ -120,7 +129,6 @@ class EntityFactoryConfig
 
         return $this;
     }
-
 
     /**
      * @return string

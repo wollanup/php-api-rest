@@ -1,0 +1,25 @@
+<database name="api_behavior_test_0">
+	<table name="a">
+		<column name="id" required="true" primaryKey="true" autoIncrement="true" type="INTEGER"/>
+		<column name="a_name" type="VARCHAR"/>
+	</table>
+
+	<table name="b">
+		<column name="id" required="true" primaryKey="true" autoIncrement="true" type="INTEGER"/>
+		<column name="a_id" required="true" type="INTEGER"/>
+		<column name="b_name" type="VARCHAR"/>
+		<foreign-key foreignTable="a">
+			<reference local="a_id" foreign="id"/>
+		</foreign-key>
+	</table>
+
+	<table name="c">
+		<column name="id" required="true" primaryKey="true" autoIncrement="true" type="INTEGER"/>
+		<column name="b_id" required="true" type="INTEGER"/>
+		<column name="c_name" type="VARCHAR"/>
+		<foreign-key foreignTable="b">
+			<reference local="b_id" foreign="id"/>
+		</foreign-key>
+
+	</table>
+</database>

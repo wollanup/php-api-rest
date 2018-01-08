@@ -11,6 +11,7 @@
 
 namespace Eukles\Service\Request\QueryModifier\Modifier;
 
+use Eukles\Service\QueryModifier\Util\EasySort;
 use Eukles\Service\Request\QueryModifier\Modifier\Base\ModifierBase;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\Exception\UnknownColumnException;
@@ -43,14 +44,7 @@ class SortModifier extends ModifierBase
         if (is_string($modifiers) && null === json_decode($modifiers)) {
             $sorters = explode(',', $modifiers);
             foreach ($sorters as $sorter) {
-                $direction = Criteria::ASC;
-                if (strpos($sorter, '+') === 0) {
-                    $sorter = substr($sorter, 1);
-                } elseif (strpos($sorter, '-') === 0) {
-                    $sorter    = substr($sorter, 1);
-                    $direction = Criteria::DESC;
-                }
-
+                list($sorter, $direction) = EasySort::build($sorter);
                 $this->modifiers[] = [
                     'property'  => $sorter,
                     'direction' => $direction,

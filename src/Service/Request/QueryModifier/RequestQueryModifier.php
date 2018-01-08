@@ -9,7 +9,7 @@
 namespace Eukles\Service\Request\QueryModifier;
 
 use Eukles\Service\QueryModifier\QueryModifierInterface;
-use Eukles\Service\Request\QueryModifier\Modifier\EasySorter;
+use Eukles\Service\Request\QueryModifier\Modifier\EasyFilter;
 use Eukles\Service\Request\QueryModifier\Modifier\FilterModifier;
 use Eukles\Service\Request\QueryModifier\Modifier\SortModifier;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
@@ -66,7 +66,7 @@ class RequestQueryModifier implements RequestQueryModifierInterface
         $sorters = new SortModifier($this->request);
         $sorters->apply($query);
 
-        $easySorters = new EasySorter($this->request, ["sort", "filter"]);
+        $easySorters = new EasyFilter($this->request, ["sort", "filter"]);
         $easySorters->apply($query);
 
         return $query;
