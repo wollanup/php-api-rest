@@ -19,7 +19,7 @@ class EasyFilterTest extends TestCase
     public function testBuild()
     {
         list($operator, $value) = EasyFilter::build("foo");
-        $this->assertSame(null, $operator);
+        $this->assertSame(Criteria::EQUAL, $operator);
         $this->assertSame("foo", $value);
 
         list($operator, $value) = EasyFilter::build("!foo");
@@ -27,7 +27,7 @@ class EasyFilterTest extends TestCase
         $this->assertSame("foo", $value);
 
         list($operator, $value) = EasyFilter::build("foo,bar");
-        $this->assertSame(null, $operator);
+        $this->assertSame(Criteria::IN, $operator);
         $this->assertSame(["foo", "bar"], $value);
 
         list($operator, $value) = EasyFilter::build("!foo,bar");
@@ -94,7 +94,7 @@ class EasyFilterTest extends TestCase
         $this->assertSame(null, $value);
 
         list($operator, $value) = EasyFilter::build("'test,quoted'");
-        $this->assertSame(null, $operator);
+        $this->assertSame(Criteria::EQUAL, $operator);
         $this->assertSame("test,quoted", $value);
     }
 

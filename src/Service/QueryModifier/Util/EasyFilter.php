@@ -26,7 +26,7 @@ class EasyFilter extends EasyUtil
     public static function build($value)
     {
         # Use default operator
-        $operator = null;
+        $operator = Criteria::EQUAL;
 
         # Handle negate operator
         $firstChar = mb_substr($value, 0, 1);
@@ -79,7 +79,7 @@ class EasyFilter extends EasyUtil
         } # Handle IN operator when comma is present
         elseif (strpos($value, ',') !== false) {
             # IN operator is handled by propel
-            $operator = $negate ? Criteria::NOT_IN : null;
+            $operator = $negate ? Criteria::NOT_IN : Criteria::IN;
             $value    = explode(',', $value);
         }
 
