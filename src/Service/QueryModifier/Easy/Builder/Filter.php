@@ -6,24 +6,31 @@
  * Time: 12:47
  */
 
-namespace Eukles\Service\QueryModifier\Util;
+namespace Eukles\Service\QueryModifier\Easy\Builder;
 
 use Propel\Runtime\ActiveQuery\Criteria;
 
-class EasyFilter extends EasyUtil
+class Filter
 {
 
+    /**
+     * Used because there is no SQL operator to do a "between" condition
+     */
+    const BETWEEN = "BETWEEN";
     /**
      * @var mixed
      */
     protected $value;
+    /**
+     * @var string
+     */
+    protected $operator;
 
     /**
      * @param $value
      *
-     * @return array
      */
-    public static function build($value)
+    public function __construct(string $value)
     {
         # Use default operator
         $operator = Criteria::EQUAL;
@@ -37,12 +44,20 @@ class EasyFilter extends EasyUtil
             $firstChar = mb_substr($value, 0, 1);
         }
 
+        # handle special null value
+        if (strtolower($value === "null")) {
+            $this->value    = null;
+            $this->operator = $negate ? Criteria::ISNOTNULL : Criteria::ISNULL;
+
+            return;
+        }
+
         # Handle LIKE operator when % is present in value
         if ($firstChar === '%' || strpos($value, '%') === strlen($value) - 1) {
             $operator = $negate ? Criteria::NOT_LIKE : Criteria::LIKE;
         }# Handle min/max operator when [ is present
         elseif ($firstChar === '[') {
-            $operator = null;
+            $operator = 'BETWEEN';
             $value    = substr($value, 1);
             $lastChar = substr($value, -1);
             if ($lastChar === ']') {
@@ -50,11 +65,15 @@ class EasyFilter extends EasyUtil
             }
             $value = explode(',', $value);
             if (empty($value[0])) {
-                $value = null;
+                $operator = $negate ? Criteria::ISNOTNULL : Criteria::ISNULL;
+                $value    = null;
             } else {
                 $valueTmp = ['min' => $value[0]];
                 if (!empty($value[1])) {
                     $valueTmp['max'] = $value[1];
+                } else {
+                    $valueTmp = $value[0];
+                    $operator = Criteria::GREATER_EQUAL;
                 }
                 $value = $valueTmp;
             }
@@ -83,41 +102,23 @@ class EasyFilter extends EasyUtil
             $value    = explode(',', $value);
         }
 
-        return [$operator, $value];
-    }
-
-    /**
-     * @param $property
-     * @param $value
-     *
-     * @return bool
-     */
-    public function apply($property, $value): bool
-    {
         $this->value    = $value;
-        $this->property = $property;
-        if ($this->isAutoUseRelationQuery()) {
-            return $this->useRelationQuery();
-        } else {
-            return $this->filter();
-        }
+        $this->operator = $operator;
     }
 
     /**
-     * @return bool
+     * @return string
      */
-    protected function filter()
+    public function getOperator(): string
     {
-        # Determine if method is callable in Query class
-        $method = 'filterBy' . ucfirst($this->property);
-        if (!method_exists($this->query, $method)) {
-            return false;
-        }
+        return $this->operator;
+    }
 
-        list($value, $operator) = $this->build($this->value);
-
-        $this->query = call_user_func([$this->query, $method], $value, $operator);
-
-        return true;
+    /**
+     * @return mixed
+     */
+    public function getValue()
+    {
+        return $this->value;
     }
 }
