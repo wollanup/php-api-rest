@@ -24,6 +24,10 @@ class RequestQueryModifier implements RequestQueryModifierInterface
 {
 
     /**
+     * @var array
+     */
+    protected $excludedForEasyFilters = ["sort", "filter", "limit", "page"];
+    /**
      * @var ModelCriteria
      */
     protected $query;
@@ -46,6 +50,7 @@ class RequestQueryModifier implements RequestQueryModifierInterface
      * @param \Propel\Runtime\ActiveQuery\ModelCriteria $query
      *
      * @return \Propel\Runtime\ActiveQuery\ModelCriteria
+     * @throws \Eukles\Service\QueryModifier\UseQuery\UseQueryFromDotNotationException
      */
     public function apply(ModelCriteria $query)
     {
@@ -66,10 +71,42 @@ class RequestQueryModifier implements RequestQueryModifierInterface
         $sorters = new SortModifier($this->request);
         $sorters->apply($query);
 
-        $easySorters = new EasyFilter($this->request, ["sort", "filter", "limit", "page"]);
+        $easySorters = new EasyFilter($this->request, $this->excludedForEasyFilters);
         $easySorters->apply($query);
 
         return $query;
+    }
+
+    /**
+     * @return array
+     */
+    public function getExcludedForEasyFilters(): array
+    {
+        return $this->excludedForEasyFilters;
+    }
+
+    /**
+     * @param array $excludedForEasyFilters
+     *
+     * @return RequestQueryModifier
+     */
+    public function setExcludedForEasyFilters(array $excludedForEasyFilters): RequestQueryModifier
+    {
+        $this->excludedForEasyFilters = $excludedForEasyFilters;
+
+        return $this;
+    }
+
+    /**
+     * @param array $excludedForEasyFilters
+     *
+     * @return RequestQueryModifier
+     */
+    public function addExcludedForEasyFilters(array $excludedForEasyFilters): RequestQueryModifier
+    {
+        $this->excludedForEasyFilters = array_merge($this->excludedForEasyFilters, $excludedForEasyFilters);
+
+        return $this;
     }
 
     /**
