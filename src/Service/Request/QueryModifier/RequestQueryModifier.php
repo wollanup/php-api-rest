@@ -66,7 +66,7 @@ class RequestQueryModifier implements RequestQueryModifierInterface
         $sorters = new SortModifier($this->request);
         $sorters->apply($query);
 
-        $easySorters = new EasyFilter($this->request, ["sort", "filter"]);
+        $easySorters = new EasyFilter($this->request, ["sort", "filter", "limit", "page"]);
         $easySorters->apply($query);
 
         return $query;
