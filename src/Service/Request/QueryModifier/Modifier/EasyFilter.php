@@ -47,7 +47,7 @@ class EasyFilter
         $modifier = new Modifier($query);
         foreach ($this->request->getQueryParams() as $column => $value) {
             # Ignored params
-            if (in_array($column, $this->ignoredParams)) {
+            if (is_string($value) === false || in_array($column, $this->ignoredParams)) {
                 continue;
             }
             $filter = new Filter($value);
