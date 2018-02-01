@@ -138,7 +138,7 @@ class ActionStrategy implements InvocationStrategyInterface
                     $files = array_values($files);
                     /** @var UploadedFileInterface $attachment */
                     $buildParams[] = isset($files[0]) ? $files[0] : null;
-                } else {
+                } elseif (!$param->isDefaultValueAvailable()) {
                     throw new \InvalidArgumentException(
                         "Missing or null required parameter '{$name}' in " . $r->getName() . "::" . $m->getName()
                     );
