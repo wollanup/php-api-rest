@@ -28,7 +28,7 @@
     "crell/api-problem": "^2.0",
     "akrabat/rka-content-type-renderer": "^0.7.3",
     "vlucas/phpdotenv": "^2.4",
-    "adbario/php-dot-notation": "^1.2",
+    "adbario/php-dot-notation": "^2.0",
     "zendframework/zend-permissions-acl": "^2.6"
   },
   "require-dev": {
