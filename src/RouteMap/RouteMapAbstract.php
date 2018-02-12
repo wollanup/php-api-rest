@@ -147,7 +147,7 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
      */
     public function getPackage(): string
     {
-        return (string)($this->isSubResourceOfPackage()) ? $this->packageName : $this->resourceName;
+        return (string)(($this->isSubResourceOfPackage()) ? $this->packageName : $this->resourceName);
     }
 
     /**
