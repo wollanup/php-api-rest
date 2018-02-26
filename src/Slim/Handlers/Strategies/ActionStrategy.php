@@ -96,7 +96,7 @@ class ActionStrategy implements InvocationStrategyInterface
      *
      * @return array
      */
-    private function buildParams(
+    protected function buildParams(
         callable $callable,
         ServerRequestInterface $request,
         $routeArguments
@@ -138,7 +138,7 @@ class ActionStrategy implements InvocationStrategyInterface
                     $files = array_values($files);
                     /** @var UploadedFileInterface $attachment */
                     $buildParams[] = isset($files[0]) ? $files[0] : null;
-                } else {
+                } elseif (!$param->isDefaultValueAvailable()) {
                     throw new \InvalidArgumentException(
                         "Missing or null required parameter '{$name}' in " . $r->getName() . "::" . $m->getName()
                     );
@@ -173,7 +173,7 @@ class ActionStrategy implements InvocationStrategyInterface
      * @return ResponseInterface
      * @throws \Exception
      */
-    private function buildResponse($result, ResponseInterface $response)
+    protected function buildResponse($result, ResponseInterface $response)
     {
 
         $responseBuilder   = $this->container->getResponseBuilder();
@@ -203,7 +203,7 @@ class ActionStrategy implements InvocationStrategyInterface
      * @throws ResponseBuilderException
      * @throws ResponseFormatterException
      */
-    private function callHandler(
+    protected function callHandler(
         callable $callable,
         ServerRequestInterface $request,
         ResponseInterface $response,

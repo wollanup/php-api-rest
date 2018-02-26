@@ -8,6 +8,8 @@
 
 namespace Eukles\Service\Request\QueryModifier\Modifier;
 
+use Eukles\Service\QueryModifier\Easy\Builder\Filter;
+use Eukles\Service\QueryModifier\Easy\Modifier;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -37,18 +39,19 @@ class EasyFilter
 
     /**
      * @param ModelCriteria $query
+     *
+     * @throws \Eukles\Service\QueryModifier\UseQuery\UseQueryFromDotNotationException
      */
     public function apply(ModelCriteria $query)
     {
-        $filter = new \Eukles\Service\QueryModifier\Util\EasyFilter($query);
-        $filter->setAutoUseRelationQuery(true);
-
+        $modifier = new Modifier($query);
         foreach ($this->request->getQueryParams() as $column => $value) {
             # Ignored params
-            if (in_array($column, $this->ignoredParams)) {
+            if (is_string($value) === false || in_array($column, $this->ignoredParams)) {
                 continue;
             }
-            $filter->apply($column, $value);
+            $filter = new Filter($value);
+            $modifier->filterBy($column, $filter->getValue(), $filter->getOperator());
         }
     }
 }
