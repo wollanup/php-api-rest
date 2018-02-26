@@ -48,6 +48,7 @@ class ActionStrategy implements InvocationStrategyInterface
      * @param array                  $routeArguments
      *
      * @return mixed
+     * @throws \Exception
      */
     public function __invoke(
         callable $callable,
@@ -95,6 +96,7 @@ class ActionStrategy implements InvocationStrategyInterface
      * @param                                $routeArguments
      *
      * @return array
+     * @throws \ReflectionException
      */
     protected function buildParams(
         callable $callable,
@@ -200,8 +202,7 @@ class ActionStrategy implements InvocationStrategyInterface
      * @param array                  $routeArguments
      *
      * @return mixed
-     * @throws ResponseBuilderException
-     * @throws ResponseFormatterException
+     * @throws \Exception
      */
     protected function callHandler(
         callable $callable,
