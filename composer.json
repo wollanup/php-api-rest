@@ -35,5 +35,8 @@
     "phpunit/phpunit": "^6.0",
     "propel/propel": "~2.0@dev",
     "slim/slim": "3.*"
+  },
+  "conflict": {
+    "wollanup/php-api-rest": "<3.0"
   }
 }
