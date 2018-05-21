@@ -35,7 +35,7 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
      *
      * Can be used to an api documentation to list all errors
      *
-     * @param int    $status      HTTP status code
+     * @param int $status HTTP status code
      * @param string $description Description, may be used in api documentation
      *
      * @return RouteInterface
@@ -264,10 +264,10 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
      * '/resource/' . $entity->getId()
      * ```
      *
-     * @param string              $location
+     * @param string $location
      * @param EntityFactoryConfig $config
      *
-     * @param int                 $status
+     * @param int $status
      *
      * @return RouteInterface
      */
@@ -280,7 +280,7 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
     /**
      * Set status code in case of success response
      *
-     * @param int    $status      HTTP status code
+     * @param int $status HTTP status code
      * @param string $description Description, may be used in api documentation
      *
      * @return RouteInterface
@@ -294,4 +294,20 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
      * @return RouteInterface
      */
     public function setVerb(string $verb): RouteInterface;
+
+    /**
+     * @return bool
+     */
+    public function hasPrivilege(): bool;
+
+    /**
+     * @return string
+     */
+    public function getPrivilege(): string;
+
+    /**
+     * @param string $privilege
+     * @return RouteInterface
+     */
+    public function setPrivilege(string $privilege): RouteInterface;
 }
