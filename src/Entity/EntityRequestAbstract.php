@@ -156,7 +156,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
         if (false === empty($properties)) {
             foreach ($properties as $property) {
                 $lcProperty = lcfirst($property);
-                if (isset($requestParams[$lcProperty])) {
+                if (array_key_exists($lcProperty, $requestParams)) {
                     $data[$property] = $requestParams[$lcProperty];
                 }
             }
