@@ -22,6 +22,10 @@ class Modifier
      */
     protected $dotUseQuery;
     /**
+     * @var array List of failed filters
+     */
+    protected $failures = [];
+    /**
      * @var ModelCriteria
      */
     protected $query;
@@ -45,10 +49,25 @@ class Modifier
 
         $property    = $this->before($dotProperty);
         $method      = $this->buildMethodName(__FUNCTION__, $property);
-        $this->query = call_user_func([$this->query, $method], $value, $operator);
+        if ($this->methodExists($method)) {
+            $this->query = $this->query->{$method}($value, $operator);
+        } else {
+            $this->failures[] = $method;
+        }
         $this->after();
 
         return $this->query;
+    }
+
+    /**
+     * Determine if method is callable in Query class
+     *
+     * @param $method
+     * @return bool
+     */
+    public function methodExists($method)
+    {
+        return method_exists($this->query, $method);
     }
 
     /**
@@ -65,6 +84,16 @@ class Modifier
         $this->after();
 
         return $this->query;
+    }
+
+    /**
+     * List of failed method call
+     *
+     * @return array
+     */
+    public function getFailures(): array
+    {
+        return $this->failures;
     }
 
     /**
@@ -98,12 +127,6 @@ class Modifier
      */
     private function buildMethodName(string $action, string $property): string
     {
-        # Determine if method is callable in Query class
-        $method = $action . $property;
-        if (!method_exists($this->query, $method)) {
-            throw new BadMethodCallException(sprintf('Call to undefined method: %s.', $method));
-        }
-
-        return $method;
+        return $action . $property;
     }
 }
