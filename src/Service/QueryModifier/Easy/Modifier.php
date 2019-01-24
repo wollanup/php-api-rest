@@ -112,9 +112,13 @@ class Modifier
      */
     private function before(string $dotProperty)
     {
-        $this->dotUseQuery = new UseQueryFromDotNotation($this->query, $dotProperty);
-        $property          = $this->dotUseQuery->getProperty();
-        $this->query       = $this->dotUseQuery->useQuery();
+
+        $dotProperty = trim($dotProperty, UseQueryFromDotNotation::RELATION_SEP);
+        $parts = explode(UseQueryFromDotNotation::RELATION_SEP, $dotProperty);
+        $property = ucfirst(array_pop($parts));
+
+        $this->dotUseQuery = new UseQueryFromDotNotation($this->query);
+        $this->query = $this->dotUseQuery->fromArray($parts)->useQuery();
 
         return $property;
     }
