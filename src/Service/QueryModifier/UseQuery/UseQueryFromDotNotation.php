@@ -131,7 +131,7 @@ class UseQueryFromDotNotation
                     $path = implode(self::RELATION_SEP, $this->map);
                     throw new RelationNotFoundException("Relation \"$relation\" Not Found in \"$path\"");
                 }
-                $this->query = call_user_func([$this->query, $method], $alias);
+                $this->query = call_user_func([$this->query, $method], $alias  . "_" . $relation);
             }
         }
         $this->inUse = true;
