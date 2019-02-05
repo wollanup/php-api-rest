@@ -20,10 +20,6 @@ class UseQueryFromDotNotation
      */
     protected $depth = 0;
     /**
-     * @var string
-     */
-    protected $dotProperty;
-    /**
      * @var bool
      */
     protected $inUse = false;
@@ -32,30 +28,53 @@ class UseQueryFromDotNotation
      */
     protected $map = [];
     /**
-     * @var string
-     */
-    protected $property;
-    /**
      * @var ModelCriteria
      */
     protected $query;
 
-    public function __construct(ModelCriteria $query, string $dotProperty)
+    /**
+     * UseQueryFromDotNotation constructor.
+     * @param ModelCriteria $query
+     */
+    public function __construct(ModelCriteria $query)
     {
-        $cleanDotProperty = trim($dotProperty);
-        # Remove first dot, in this case this is NO relation, only property
-        $cleanDotProperty = ltrim($cleanDotProperty, ".");
+        $this->query = $query;
+    }
 
-        $this->map = explode(self::RELATION_SEP, $cleanDotProperty);
-
-        $this->query       = $query;
-        $this->dotProperty = $cleanDotProperty;
-        $this->property    = array_pop($this->map);
-        $this->depth       = count($this->map);
-
-        if (empty($this->property)) {
-            throw new \InvalidArgumentException("Property is empty in \"$dotProperty\"");
+    /**
+     * @param array $relations
+     * @return UseQueryFromDotNotation
+     */
+    public function fromArray(array $relations): self
+    {
+        if (empty($relations)) {
+            return $this;
         }
+
+        $this->map = $relations;
+        $this->depth = count($this->map);
+
+        return $this;
+    }
+
+    /**
+     * @param string $relations
+     * @return UseQueryFromDotNotation
+     */
+    public function fromString(string $relations): self
+    {
+        $relations = trim($relations);
+        # Remove first dot, in this case this is NO relation, only property
+        $relations = ltrim($relations, ".");
+
+        if (empty($relations)) {
+            return $this;
+        }
+
+        $this->map = explode(self::RELATION_SEP, $relations);
+        $this->depth = count($this->map);
+
+        return $this;
     }
 
     /**
@@ -87,14 +106,6 @@ class UseQueryFromDotNotation
     }
 
     /**
-     * @return string ucfirst string
-     */
-    public function getProperty(): string
-    {
-        return ucfirst($this->property);
-    }
-
-    /**
      * @return bool
      */
     public function isInUse(): bool
@@ -103,10 +114,11 @@ class UseQueryFromDotNotation
     }
 
     /**
+     * @param null $alias
      * @return ModelCriteria
      * @throws UseQueryFromDotNotationException
      */
-    public function useQuery(): ModelCriteria
+    public function useQuery($alias = null): ModelCriteria
     {
         if ($this->inUse) {
             throw new UseQueryFromDotNotationException("A query is already in use and have not be terminated with UseQueryFromDotNotation::endUse()");
@@ -116,9 +128,10 @@ class UseQueryFromDotNotation
             foreach ($this->map as $relation) {
                 $method = sprintf('use%sQuery', ucfirst($relation));
                 if (!method_exists($this->query, $method)) {
-                    throw new RelationNotFoundException("Relation \"$relation\" Not Found in \"$this->dotProperty\"");
+                    $path = implode(self::RELATION_SEP, $this->map);
+                    throw new RelationNotFoundException("Relation \"$relation\" Not Found in \"$path\"");
                 }
-                $this->query = call_user_func([$this->query, $method]);
+                $this->query = call_user_func([$this->query, $method], $alias  . "_" . $relation);
             }
         }
         $this->inUse = true;

@@ -33,28 +33,19 @@ class UseQueryFromDotNotationTest extends TestCase
     {
 
         $query = $this->mockQueryInstance();
-        $use   = new UseQueryFromDotNotation($query, "aName");
-        $use->useQuery();
-        $this->assertSame(0, $use->getDepth());
-        $usedQuery = $use->endUse();
-        $this->assertInstanceOf(\AQuery::class, $usedQuery);
-        $this->assertSame("AName", $use->getProperty());
-        $this->assertFalse($use->isInUse());
 
-        $use = new UseQueryFromDotNotation($query, "b.bName");
-        $use->useQuery();
+        $use = new UseQueryFromDotNotation($query);
+        $use->fromString("b")->useQuery();
         $this->assertSame(1, $use->getDepth());
         $usedQuery = $use->endUse();
         $this->assertInstanceOf(\AQuery::class, $usedQuery);
-        $this->assertSame("BName", $use->getProperty());
         $this->assertFalse($use->isInUse());
 
-        $use = new UseQueryFromDotNotation($query, "b.c.cName");
-        $use->useQuery();
+        $use = new UseQueryFromDotNotation($query);
+        $use->fromString("b.c")->useQuery();
         $this->assertSame(2, $use->getDepth());
         $usedQuery = $use->endUse();
         $this->assertInstanceOf(\AQuery::class, $usedQuery);
-        $this->assertSame("CName", $use->getProperty());
         $this->assertFalse($use->isInUse());
     }
 
@@ -64,7 +55,7 @@ class UseQueryFromDotNotationTest extends TestCase
     public function testEndUseBeforeUse()
     {
         $query = $this->mockQueryInstance();
-        $use   = new UseQueryFromDotNotation($query, "zzz.foo");
+        $use = new UseQueryFromDotNotation($query);
         $this->expectException(UseQueryFromDotNotationException::class);
         $use->endUse();
     }
@@ -82,21 +73,27 @@ class UseQueryFromDotNotationTest extends TestCase
      */
     public function testUseQuery()
     {
-        $query     = $this->mockQueryInstance();
-        $use       = new UseQueryFromDotNotation($query, "foo");
-        $usedQuery = $use->useQuery();
-        $this->assertInstanceOf(\AQuery::class, $usedQuery);
-        $this->assertTrue(method_exists($usedQuery, "filterByAName"));
+        //        $query     = $this->mockQueryInstance();
+        //        $use       = new UseQueryFromDotNotation($query, "foo");
+        //        $usedQuery = $use->useQuery();
+        //        $this->assertInstanceOf(\AQuery::class, $usedQuery);
+        //        $this->assertTrue(method_exists($usedQuery, "filterByAName"));
 
         $query     = $this->mockQueryInstance();
-        $use       = new UseQueryFromDotNotation($query, "b.foo");
-        $usedQuery = $use->useQuery();
+        $use = new UseQueryFromDotNotation($query);
+        $usedQuery = $use->fromString("b")->useQuery();
+        $this->assertInstanceOf(\BQuery::class, $usedQuery);
+        $this->assertTrue(method_exists($usedQuery, "filterByBName"));
+
+        $query = $this->mockQueryInstance();
+        $use = new UseQueryFromDotNotation($query);
+        $usedQuery = $use->fromArray(["b"])->useQuery();
         $this->assertInstanceOf(\BQuery::class, $usedQuery);
         $this->assertTrue(method_exists($usedQuery, "filterByBName"));
 
         $query     = $this->mockQueryInstance();
-        $use       = new UseQueryFromDotNotation($query, "b.c.foo");
-        $usedQuery = $use->useQuery();
+        $use = new UseQueryFromDotNotation($query);
+        $usedQuery = $use->fromString("b.c")->useQuery();
         $this->assertInstanceOf(\CQuery::class, $usedQuery);
         $this->assertTrue(method_exists($usedQuery, "filterByCName"));
     }
@@ -107,8 +104,8 @@ class UseQueryFromDotNotationTest extends TestCase
     public function testUseQueryAlreadyInUse()
     {
         $query = $this->mockQueryInstance();
-        $use   = new UseQueryFromDotNotation($query, "b.foo");
-        $use->useQuery();
+        $use = new UseQueryFromDotNotation($query);
+        $use->fromString("b")->useQuery();
         $this->expectException(UseQueryFromDotNotationException::class);
         $use->useQuery();
     }
@@ -119,30 +116,26 @@ class UseQueryFromDotNotationTest extends TestCase
     public function testUseQueryRelationNotFound()
     {
         $query = $this->mockQueryInstance();
-        $use   = new UseQueryFromDotNotation($query, "zzz.foo");
+        $use = new UseQueryFromDotNotation($query);
         $this->expectException(RelationNotFoundException::class);
-        $use->useQuery();
-    }
-
-    public function testUseQueryWithBadProperty()
-    {
-        $query = $this->mockQueryInstance();
-        $this->expectException(\InvalidArgumentException::class);
-        new UseQueryFromDotNotation($query, "b.");
+        $use->fromString("zzz")->useQuery();
     }
 
     public function testUseQueryWithDotBeforeProperty()
     {
         $query = $this->mockQueryInstance();
-        $use   = new UseQueryFromDotNotation($query, ".b");
-        $this->assertSame(0, $use->getDepth());
+        $use = new UseQueryFromDotNotation($query);
+        $use->fromString(".b");
+        $this->assertSame(1, $use->getDepth());
     }
 
     public function testUseQueryWithEmptyProperty()
     {
         $query = $this->mockQueryInstance();
-        $this->expectException(\InvalidArgumentException::class);
-        new UseQueryFromDotNotation($query, "");
+        $use = new UseQueryFromDotNotation($query);
+        $use->fromString("");
+        $this->assertSame(0, $use->getDepth());
+
     }
 
     /**

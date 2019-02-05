@@ -12,7 +12,6 @@ use PHPUnit\Framework\TestCase;
 use Propel\Generator\Util\QuickBuilder;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
-use Propel\Runtime\Exception\BadMethodCallException;
 use Propel\Runtime\Propel;
 
 class ModifierTest extends TestCase
@@ -62,8 +61,8 @@ class ModifierTest extends TestCase
     {
         $query    = $this->mockQueryInstance();
         $modifier = new Modifier($query);
-        $this->expectException(BadMethodCallException::class);
         $modifier->filterBy('Foo');
+        $this->assertTrue(in_array('filterByFoo', $modifier->getFailures()));
     }
 
     /**
