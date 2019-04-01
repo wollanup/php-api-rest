@@ -2,6 +2,7 @@
 
 namespace Eukles\Slim\Handlers\Strategies;
 
+use Closure;
 use Eukles\Action;
 use Eukles\Container\ContainerInterface;
 use Eukles\Service\Pagination\PaginationInterface;
@@ -9,9 +10,14 @@ use Eukles\Service\QueryModifier\QueryModifierInterface;
 use Eukles\Service\ResponseBuilder\ResponseBuilderException;
 use Eukles\Service\ResponseFormatter\ResponseFormatterException;
 use Eukles\Slim\Handlers\ApiProblemRendererTrait;
+use Exception;
+use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
+use ReflectionClass;
+use ReflectionException;
+use ReflectionParameter;
 use Slim\Interfaces\InvocationStrategyInterface;
 
 /**
@@ -48,7 +54,7 @@ class ActionStrategy implements InvocationStrategyInterface
      * @param array                  $routeArguments
      *
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     public function __invoke(
         callable $callable,
@@ -81,7 +87,7 @@ class ActionStrategy implements InvocationStrategyInterface
 
         try {
             return call_user_func_array($callable, $this->buildParams($callable, $request, $routeArguments));
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $handler = $this->container->getActionErrorHandler();
 
             return $handler($e, $request, $response);
@@ -96,7 +102,7 @@ class ActionStrategy implements InvocationStrategyInterface
      * @param                                $routeArguments
      *
      * @return array
-     * @throws \ReflectionException
+     * @throws ReflectionException
      */
     protected function buildParams(
         callable $callable,
@@ -108,7 +114,7 @@ class ActionStrategy implements InvocationStrategyInterface
             return [];
         }
 
-        $r            = new \ReflectionClass($callable[0]);
+        $r = new ReflectionClass($callable[0]);
         $m            = $r->getMethod($callable[1]);
         $paramsMethod = $m->getParameters();
 
@@ -124,7 +130,7 @@ class ActionStrategy implements InvocationStrategyInterface
 
         $buildParams   = [];
 
-        /** @var \ReflectionParameter[] $params */
+        /** @var ReflectionParameter[] $params */
         foreach ($paramsMethod as $param) {
             $name  = $param->getName();
             $class = $param->getClass();
@@ -141,7 +147,7 @@ class ActionStrategy implements InvocationStrategyInterface
                     /** @var UploadedFileInterface $attachment */
                     $buildParams[] = isset($files[0]) ? $files[0] : null;
                 } elseif (!$param->isDefaultValueAvailable()) {
-                    throw new \InvalidArgumentException(
+                    throw new InvalidArgumentException(
                         "Missing or null required parameter '{$name}' in " . $r->getName() . "::" . $m->getName()
                     );
                 }
@@ -155,7 +161,7 @@ class ActionStrategy implements InvocationStrategyInterface
                 } elseif ($param->isDefaultValueAvailable()) {
                     $paramValue = $param->getDefaultValue();
                 } else {
-                    throw new \InvalidArgumentException(
+                    throw new InvalidArgumentException(
                         "Missing or null required parameter '{$name}' in " . $r->getName() . "::" . $m->getName()
                     );
                 }
@@ -170,10 +176,10 @@ class ActionStrategy implements InvocationStrategyInterface
      * Build a string response
      *
      * @param mixed                               $result
-     * @param \Psr\Http\Message\ResponseInterface $response
+     * @param ResponseInterface $response
      *
      * @return ResponseInterface
-     * @throws \Exception
+     * @throws Exception
      */
     protected function buildResponse($result, ResponseInterface $response)
     {
@@ -202,7 +208,7 @@ class ActionStrategy implements InvocationStrategyInterface
      * @param array                  $routeArguments
      *
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     protected function callHandler(
         callable $callable,
@@ -211,13 +217,14 @@ class ActionStrategy implements InvocationStrategyInterface
         array $routeArguments
     ) {
         # Action is a closure
-        if ($callable instanceof \Closure) {
+        if ($callable instanceof Closure) {
             array_unshift($routeArguments, $request, $response);
             $result = call_user_func_array($callable, $routeArguments);
         } else {
             # Action is a method of an Action class
             if (is_array($callable) && $callable[0] instanceof Action\ActionInterface) {
                 $callable[0]->setResponse($response);
+                $callable[0]->setRequest($request);
             }
 
             # Call Action method

@@ -5,6 +5,7 @@ namespace Eukles\Action;
 use Eukles\Service\QueryModifier\QueryModifierInterface;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Psr\Container\ContainerInterface;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -45,6 +46,18 @@ interface ActionInterface
      * @return ActionInterface
      */
     public function setResponse(ResponseInterface $response): ActionInterface;
+
+    /**
+     * @param RequestInterface $request
+     *
+     * @return ActionInterface
+     */
+    public function setRequest(RequestInterface $request): ActionInterface;
+
+    /**
+     * @return RequestInterface
+     */
+    public function getRequest(): RequestInterface;
 
     /**
      * Action factory
