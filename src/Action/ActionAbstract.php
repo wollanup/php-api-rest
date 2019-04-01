@@ -5,6 +5,7 @@ namespace Eukles\Action;
 use Eukles\Container\ContainerTrait;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Psr\Container\ContainerInterface;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -24,6 +25,11 @@ abstract class ActionAbstract implements ActionInterface
      * @var ResponseInterface
      */
     protected $response;
+
+    /**
+     * @var RequestInterface
+     */
+    protected $request;
 
     /**
      * SlimControllerInterface constructor.
@@ -57,5 +63,25 @@ abstract class ActionAbstract implements ActionInterface
         $this->response = $response;
 
         return $this;
+    }
+
+    /**
+     * @param RequestInterface $request
+     *
+     * @return ActionInterface
+     */
+    public function setRequest(RequestInterface $request): ActionInterface
+    {
+        $this->request = $request;
+
+        return $this;
+    }
+
+    /**
+     * @return RequestInterface
+     */
+    public function getRequest(): RequestInterface
+    {
+        return $this->request;
     }
 }
