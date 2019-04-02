@@ -12,6 +12,7 @@ use Eukles\Service\ResponseFormatter\ResponseFormatterException;
 use Eukles\Slim\Handlers\ApiProblemRendererTrait;
 use Exception;
 use InvalidArgumentException;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
@@ -181,7 +182,7 @@ class ActionStrategy implements InvocationStrategyInterface
      * @return ResponseInterface
      * @throws Exception
      */
-    protected function buildResponse($result, ResponseInterface $response)
+    protected function buildResponse($result, ResponseInterface $response, RequestInterface $request)
     {
 
         $responseBuilder   = $this->container->getResponseBuilder();
@@ -192,6 +193,9 @@ class ActionStrategy implements InvocationStrategyInterface
         }
         if (!is_callable($responseFormatter)) {
             throw new ResponseFormatterException('ResponseFormatter must be callable or implements ResponseFormatterInterface');
+        }
+        if (method_exists($responseBuilder, 'setRequest')) {
+            $responseBuilder->setRequest($request);
         }
 
         $result = $responseBuilder($result);
@@ -237,7 +241,7 @@ class ActionStrategy implements InvocationStrategyInterface
         if (($result instanceof ResponseInterface)) {
             $response = $result;
         } else {
-            $response = $this->buildResponse($result, $response);
+            $response = $this->buildResponse($result, $response, $request);
         }
 
         return $response;
