@@ -10,7 +10,6 @@ namespace Service\Request\Pagination;
 
 use Eukles\Service\Pagination\PaginationInterface;
 use Eukles\Service\Request\Pagination\RequestPagination;
-use Eukles\Service\Request\Pagination\RequestPaginationInterface;
 use Eukles\Test\Util\Request;
 use PHPUnit\Framework\TestCase;
 
@@ -93,7 +92,7 @@ class RequestPaginationTest extends TestCase
         ]);
         $r->setMethod('POST');
         $rp = new RequestPagination($r);
-        $this->assertSame(RequestPaginationInterface::DEFAULT_PAGE, $rp->getPage());
-        $this->assertsame(RequestPaginationInterface::DEFAULT_LIMIT, $rp->getLimit());
+        $this->assertSame(2, $rp->getPage());
+        $this->assertsame(3, $rp->getLimit());
     }
 }
