@@ -49,7 +49,7 @@ class EntityFactory implements EntityFactoryInterface
         ResponseInterface $response,
         callable $next
     ): ResponseInterface {
-        $entityRequest = $config->createEntityRequest($this->container);
+        $entityRequest = $config->createEntityRequest($request, $this->container);
 
         # make a new empty record
         $obj = $entityRequest->instantiateActiveRecord();
@@ -93,7 +93,7 @@ class EntityFactory implements EntityFactoryInterface
         ResponseInterface $response,
         callable $next
     ): ResponseInterface {
-        $entityRequest = $config->createEntityRequest($this->container);
+        $entityRequest = $config->createEntityRequest($request, $this->container);
 
         # First, we try to determine PK in request path (most common case)
         if (isset($request->getAttribute('routeInfo')[2][$config->getRequestParameterName()])) {

@@ -9,6 +9,7 @@
 namespace Eukles\Entity;
 
 use Eukles\Container\ContainerInterface;
+use Psr\Http\Message\RequestInterface;
 
 class EntityFactoryConfig
 {
@@ -69,13 +70,21 @@ class EntityFactoryConfig
     }
 
     /**
+     * @param RequestInterface $request
      * @param ContainerInterface $container
      *
      * @return EntityRequestInterface
      */
-    public function createEntityRequest(ContainerInterface $container): EntityRequestInterface
+    public function createEntityRequest(
+        RequestInterface $request,
+        ContainerInterface $container
+    ): EntityRequestInterface
     {
-        return new $this->entityRequest($container);
+        /** @var EntityRequestInterface $er */
+        $er = new $this->entityRequest($request);
+        $er->setContainer($container);
+
+        return $er;
     }
 
     /**
@@ -213,7 +222,7 @@ class EntityFactoryConfig
     public function validate()
     {
         if (!$this->type || !in_array($this->type, self::$types)) {
-            throw new EntityFactoryConfigException('Config must have an EntityRequest class');
+            throw new EntityFactoryConfigException('Config must have a type');
         }
         if ($this->hydrateEntityFromRequest === null) {
             throw new EntityFactoryConfigException('Config must know if entity will be hydrated with request params');
