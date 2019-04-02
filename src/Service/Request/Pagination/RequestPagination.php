@@ -31,10 +31,6 @@ class RequestPagination implements RequestPaginationInterface
     {
         $this->request = $request;
 
-        if (strtoupper($request->getMethod()) !== 'GET') {
-            return;
-        }
-
         $limit = (int)$this->getParam($this->request, self::REQUEST_PARAM_LIMIT, self::DEFAULT_LIMIT);
 
         if ($limit > self::MAX_LIMIT) {
