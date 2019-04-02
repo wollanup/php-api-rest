@@ -8,6 +8,8 @@
 
 namespace Eukles\Service\QueryModifier\Easy;
 
+use AQuery;
+use Eukles\Service\QueryModifier\UseQuery\UseQueryFromDotNotationException;
 use PHPUnit\Framework\TestCase;
 use Propel\Generator\Util\QuickBuilder;
 use Propel\Runtime\ActiveQuery\Criteria;
@@ -33,7 +35,7 @@ class ModifierTest extends TestCase
     }
 
     /**
-     * @throws \Eukles\Service\QueryModifier\UseQuery\UseQueryFromDotNotationException
+     * @throws UseQueryFromDotNotationException
      */
     public function testFilterBy()
     {
@@ -50,12 +52,12 @@ class ModifierTest extends TestCase
         $query    = $this->mockQueryInstance();
         $modifier = new Modifier($query);
         $query    = $modifier->filterBy('b.bName');
-        $this->assertContains("WHERE b.b_name", $query->toString());
-        $this->assertContains("FROM a INNER JOIN b ON (a.id=b.a_id)", $query->toString());
+        $this->assertContains("WHERE _b.b_name", $query->toString());
+        $this->assertContains("FROM a INNER JOIN b _b ON (a.id=_b.a_id)", $query->toString());
     }
 
     /**
-     * @throws \Eukles\Service\QueryModifier\UseQuery\UseQueryFromDotNotationException
+     * @throws UseQueryFromDotNotationException
      */
     public function testFilterByFailure()
     {
@@ -66,7 +68,7 @@ class ModifierTest extends TestCase
     }
 
     /**
-     * @throws \Eukles\Service\QueryModifier\UseQuery\UseQueryFromDotNotationException
+     * @throws UseQueryFromDotNotationException
      */
     public function testOrderBy()
     {
@@ -78,7 +80,7 @@ class ModifierTest extends TestCase
         $query    = $this->mockQueryInstance();
         $modifier = new Modifier($query);
         $query    = $modifier->orderBy('b.bName', 'DESC');
-        $this->assertContains("ORDER BY b.b_name DESC", $query->toString());
+        $this->assertContains("ORDER BY _b.b_name DESC", $query->toString());
     }
 
     /**
@@ -88,7 +90,7 @@ class ModifierTest extends TestCase
     {
 
         /** @var ModelCriteria $query */
-        $query = new \AQuery;
+        $query = new AQuery;
 
         return $query;
     }
