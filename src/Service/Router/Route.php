@@ -11,6 +11,8 @@ namespace Eukles\Service\Router;
 use Eukles\Container\ContainerInterface;
 use Eukles\Container\ContainerTrait;
 use Eukles\Entity\EntityFactoryConfig;
+use Eukles\Entity\EntityFactoryConfigException as EntityFactoryConfigExceptionAlias;
+use Eukles\Entity\EntityRequestInterface;
 use Eukles\Entity\Middleware\CollectionFetch;
 use Eukles\Entity\Middleware\EntityMiddleware;
 use Eukles\RouteMap\RouteMapInterface;
@@ -18,6 +20,8 @@ use Eukles\Service\Router\Exception\RouteEmptyValueException;
 use Eukles\Service\Router\Middleware\SuccessHeaderLocationMiddleware;
 use Eukles\Service\Router\Middleware\SuccessStatusMiddleware;
 use Eukles\Slim\DeferredCallable;
+use InvalidArgumentException;
+use RuntimeException;
 use Zend\Permissions\Acl\Role\GenericRole;
 use Zend\Permissions\Acl\Role\RoleInterface;
 
@@ -243,7 +247,7 @@ class Route extends \Slim\Route implements RouteInterface
     public function getEntityConfig(string $paramName): EntityFactoryConfig
     {
         if (!$this->hasEntity($paramName)) {
-            throw new \RuntimeException("Unknown entity parameter");
+            throw new RuntimeException("Unknown entity parameter");
         }
 
         return $this->entities[$paramName];
@@ -387,7 +391,7 @@ class Route extends \Slim\Route implements RouteInterface
         if (is_string($role)) {
             $this->roles[] = new GenericRole($role);
         } elseif (!$role instanceof RoleInterface) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'addRole() expects $role to be of type Zend\Permissions\Acl\Role\RoleInterface'
             );
         }
@@ -446,7 +450,7 @@ class Route extends \Slim\Route implements RouteInterface
      *
      * @return RouteInterface
      * @throws RouteEmptyValueException
-     * @throws \Eukles\Entity\EntityFactoryConfigException
+     * @throws EntityFactoryConfigExceptionAlias
      * @deprecated
      * @see Route::fetchEntity()
      * @see Route::createEntity()
@@ -491,7 +495,7 @@ class Route extends \Slim\Route implements RouteInterface
      * @param EntityFactoryConfig $config
      *
      * @return RouteInterface
-     * @throws \Eukles\Entity\EntityFactoryConfigException
+     * @throws EntityFactoryConfigExceptionAlias
      * @throws RouteEmptyValueException
      */
     public function fetchEntity(EntityFactoryConfig $config): RouteInterface
@@ -509,9 +513,9 @@ class Route extends \Slim\Route implements RouteInterface
         }
         # Auto determine name of parameter to add
         if (!$config->issetParameterToInjectInto()) {
-            $config->setParameterToInjectInto(
-                $config->createEntityRequest($this->container)->getNameOfParameterToAdd(false)
-            );
+            /** @var EntityRequestInterface $entityRequestClass */
+            $entityRequestClass = $config->getRequestParameterName();
+            $config->setParameterToInjectInto($entityRequestClass::getNameOfParameterToAdd(false));
         }
 
         # Make sure config is clean
@@ -526,7 +530,7 @@ class Route extends \Slim\Route implements RouteInterface
      * @param EntityFactoryConfig $config
      *
      * @return RouteInterface
-     * @throws \Eukles\Entity\EntityFactoryConfigException
+     * @throws EntityFactoryConfigExceptionAlias
      */
     public function createEntity(EntityFactoryConfig $config): RouteInterface
     {
@@ -542,9 +546,9 @@ class Route extends \Slim\Route implements RouteInterface
         }
         # Auto determine name of parameter to add
         if (!$config->issetParameterToInjectInto()) {
-            $config->setParameterToInjectInto(
-                $config->createEntityRequest($this->container)->getNameOfParameterToAdd(false)
-            );
+            /** @var EntityRequestInterface $entityRequestClass */
+            $entityRequestClass = $config->getRequestParameterName();
+            $config->setParameterToInjectInto($entityRequestClass::getNameOfParameterToAdd(false));
         }
 
         # Make sure config is clean

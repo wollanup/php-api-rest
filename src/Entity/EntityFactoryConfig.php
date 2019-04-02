@@ -207,6 +207,9 @@ class EntityFactoryConfig
         return $this->parameterToInjectInto !== null;
     }
 
+    /**
+     * @throws EntityFactoryConfigException
+     */
     public function validate()
     {
         if (!$this->type || !in_array($this->type, self::$types)) {
