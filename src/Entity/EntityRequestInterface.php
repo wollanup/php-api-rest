@@ -238,7 +238,7 @@ interface EntityRequestInterface
     /**
      * @return ActiveRecordInterface|string
      */
-    public static function getActiveRecordClassName();
+    public function getActiveRecordClassName();
 
     /**
      *

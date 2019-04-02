@@ -514,7 +514,7 @@ class Route extends \Slim\Route implements RouteInterface
         # Auto determine name of parameter to add
         if (!$config->issetParameterToInjectInto()) {
             /** @var EntityRequestInterface $entityRequestClass */
-            $entityRequestClass = $config->getRequestParameterName();
+            $entityRequestClass = $config->getEntityRequest();
             $config->setParameterToInjectInto($entityRequestClass::getNameOfParameterToAdd(false));
         }
 
@@ -547,7 +547,7 @@ class Route extends \Slim\Route implements RouteInterface
         # Auto determine name of parameter to add
         if (!$config->issetParameterToInjectInto()) {
             /** @var EntityRequestInterface $entityRequestClass */
-            $entityRequestClass = $config->getRequestParameterName();
+            $entityRequestClass = $config->getEntityRequest();
             $config->setParameterToInjectInto($entityRequestClass::getNameOfParameterToAdd(false));
         }
 
