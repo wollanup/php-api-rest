@@ -12,6 +12,7 @@ use Eukles\Container\ContainerInterface;
 use Eukles\Container\ContainerTrait;
 use Eukles\Entity\EntityFactoryConfig;
 use Psr\Http\Message\ResponseInterface;
+use RuntimeException;
 
 /**
  * Class EntityFetch
@@ -50,7 +51,6 @@ class EntityMiddleware implements RouteEntityMiddlewareInterface
     public function __invoke($request, $response, $next): ResponseInterface
     {
         if ($this->config->isTypeFetch()) {
-            /** @var ContainerInterface $this */
             return $this->getContainer()->getEntityFactory()->fetch(
                 $this->config,
                 $request,
@@ -58,7 +58,6 @@ class EntityMiddleware implements RouteEntityMiddlewareInterface
                 $next
             );
         } elseif ($this->config->isTypeCreate()) {
-            /** @var ContainerInterface $this */
             return $this->getContainer()->getEntityFactory()->create(
                 $this->config,
                 $request,
@@ -66,7 +65,7 @@ class EntityMiddleware implements RouteEntityMiddlewareInterface
                 $next
             );
         } else {
-            throw new \RuntimeException('Invalid EntityFactoryConfig type');
+            throw new RuntimeException('Invalid EntityFactoryConfig type');
         }
     }
 }

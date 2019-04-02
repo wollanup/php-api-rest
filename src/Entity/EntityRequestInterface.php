@@ -6,7 +6,10 @@ use Eukles\Action\ActionInterface;
 use Eukles\Container\ContainerInterface;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\ActiveRecord\ActiveRecordInterface;
+use Propel\Runtime\Map\Exception\RelationNotFoundException;
+use Propel\Runtime\Map\RelationMap;
 use Propel\Runtime\Map\TableMap;
+use Psr\Http\Message\RequestInterface;
 
 /**
  * Interface ActiveRecordRequestInterface
@@ -19,9 +22,20 @@ interface EntityRequestInterface
     /**
      * ActiveRecordRequestTrait constructor.
      *
-     * @param ContainerInterface $c
+     * @param RequestInterface $request
      */
-    public function __construct(ContainerInterface $c);
+    public function __construct(RequestInterface $request);
+
+    /**
+     * @return RequestInterface
+     */
+    public function getRequest(): RequestInterface;
+
+    /**
+     * @param RequestInterface $request
+     * @return EntityRequestAbstract
+     */
+    public function setRequest(RequestInterface $request): EntityRequestAbstract;
 
     /**
      * @param \Psr\Container\ContainerInterface|ContainerInterface $c
@@ -29,39 +43,40 @@ interface EntityRequestInterface
      * @return mixed
      */
     public function setContainer(\Psr\Container\ContainerInterface $c);
-    /**
-     * Set state of the object after request data hydration
-     *
-     * @param ActiveRecordInterface $obj
-     *
-     */
-    public function afterCreate(ActiveRecordInterface $obj);
 
     /**
      * Set state of the object after request data hydration
      *
      * @param ActiveRecordInterface $obj
-     *
+     * @param RequestInterface $request
      */
-    public function afterFetch(ActiveRecordInterface $obj);
+    public function afterCreate(ActiveRecordInterface $obj, RequestInterface $request);
+
+    /**
+     * Set state of the object after request data hydration
+     *
+     * @param ActiveRecordInterface $obj
+     * @param RequestInterface $request
+     */
+    public function afterFetch(ActiveRecordInterface $obj, RequestInterface $request);
 
     /**
      * Set state of the object before request data hydration
      *
      * @param ActiveRecordInterface $obj
-     *
+     * @param RequestInterface $request
      */
-    public function beforeCreate(ActiveRecordInterface $obj);
+    public function beforeCreate(ActiveRecordInterface $obj, RequestInterface $request);
 
     /**
      * Set state of the object before request data hydration
      *
      * @param ModelCriteria $query
      *
+     * @param RequestInterface $request
      * @return ModelCriteria
-     *
      */
-    public function beforeFetch(ModelCriteria $query);
+    public function beforeFetch(ModelCriteria $query, RequestInterface $request);
 
     /**
      *
@@ -106,14 +121,6 @@ interface EntityRequestInterface
     public function getModifiableProperties();
 
     /**
-     *
-     * @param bool $plural
-     *
-     * @return string
-     */
-    public function getNameOfParameterToAdd($plural = false);
-
-    /**
      * @return mixed
      */
     public function getPrimaryKey();
@@ -122,17 +129,17 @@ interface EntityRequestInterface
      * Gets a RelationMap of the table by relation name
      * This method will build the relations if they are not built yet
      *
-     * @param  string $relation The relation name
+     * @param string $relation The relation name
      *
-     * @return \Propel\Runtime\Map\RelationMap                         The relation object
-     * @throws \Propel\Runtime\Map\Exception\RelationNotFoundException When called on an inexistent relation
+     * @return RelationMap                         The relation object
+     * @throws RelationNotFoundException When called on an inexistent relation
      */
     public function getRelation($relation);
 
     /**
      * Gets the type of the relation (on to one, one to many ...)
      *
-     * @param  string $relation The relation name
+     * @param string $relation The relation name
      *
      * @return string Type of the relation (on to one, one to many ...)
      *
@@ -140,7 +147,7 @@ interface EntityRequestInterface
     public function getRelationType($relation);
 
     /**
-     * @return \Propel\Runtime\Map\RelationMap[] array
+     * @return RelationMap[] array
      *
      */
     public function getRelations();
@@ -187,7 +194,7 @@ interface EntityRequestInterface
      * @param string $relation Name of the relation in CAMELNAME format (e.g. "myRelation")
      *
      * @return bool
-     * @throws \Propel\Runtime\Map\Exception\RelationNotFoundException When called on an inexistent relation
+     * @throws RelationNotFoundException When called on an inexistent relation
      */
     public function isPluralRelation($relation);
 
@@ -231,5 +238,13 @@ interface EntityRequestInterface
     /**
      * @return ActiveRecordInterface|string
      */
-    public function getActiveRecordClassName();
+    public static function getActiveRecordClassName();
+
+    /**
+     *
+     * @param bool $plural
+     *
+     * @return string
+     */
+    public static function getNameOfParameterToAdd($plural = false);
 }

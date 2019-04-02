@@ -2,13 +2,14 @@
 
 namespace Eukles\Entity;
 
-use Eukles\Container\ContainerInterface;
 use Eukles\Container\ContainerTrait;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\ActiveRecord\ActiveRecordInterface;
+use Propel\Runtime\Exception\PropelException;
 use Propel\Runtime\Map\Exception\RelationNotFoundException;
 use Propel\Runtime\Map\RelationMap;
 use Propel\Runtime\Map\TableMap;
+use Psr\Http\Message\RequestInterface;
 
 /**
  * ActiveRecordRequestInterface Base class
@@ -39,13 +40,35 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
      * @var bool
      */
     protected $relationsBuilt = false;
+    /**
+     * @var RequestInterface
+     */
+    protected $request;
 
     /**
      * @inheritdoc
      */
-    public function __construct(ContainerInterface $c)
+    public function __construct(RequestInterface $request)
     {
-        $this->container = $c;
+        $this->request = $request;
+    }
+
+    /**
+     * @return RequestInterface
+     */
+    public function getRequest(): RequestInterface
+    {
+        return $this->request;
+    }
+
+    /**
+     * @param RequestInterface $request
+     * @return EntityRequestAbstract
+     */
+    public function setRequest(RequestInterface $request): EntityRequestAbstract
+    {
+        $this->request = $request;
+        return $this;
     }
 
     /**
@@ -54,20 +77,12 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     abstract public function getActionClassName();
 
     /**
-     * All properties of ActiveRecord
-     *
-     * @return array
-     * @throws \Propel\Runtime\Exception\PropelException
-     */
-    abstract protected function getAllProperties();
-
-    /**
      * Set state of the object after request data hydration
      *
      * @param ActiveRecordInterface $obj
-     *
+     * @param RequestInterface $request
      */
-    public function afterCreate(ActiveRecordInterface $obj)
+    public function afterCreate(ActiveRecordInterface $obj, RequestInterface $request)
     {
     }
 
@@ -75,9 +90,9 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
      * Set state of the object after request data hydration
      *
      * @param ActiveRecordInterface $obj
-     *
+     * @param RequestInterface $request
      */
-    public function afterFetch(ActiveRecordInterface $obj)
+    public function afterFetch(ActiveRecordInterface $obj, RequestInterface $request)
     {
     }
 
@@ -85,9 +100,9 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
      * Set state of the object before request data hydration
      *
      * @param ActiveRecordInterface $obj
-     *
+     * @param RequestInterface $request
      */
-    public function beforeCreate(ActiveRecordInterface $obj)
+    public function beforeCreate(ActiveRecordInterface $obj, RequestInterface $request)
     {
     }
 
@@ -96,10 +111,10 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
      *
      * @param ModelCriteria $query
      *
+     * @param RequestInterface $request
      * @return ModelCriteria
-     *
      */
-    public function beforeFetch(ModelCriteria $query)
+    public function beforeFetch(ModelCriteria $query, RequestInterface $request)
     {
         return $query;
     }
@@ -108,6 +123,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
      * None, all or partial list of properties
      *
      * @return array List of modifiable properties
+     * @throws PropelException
      */
     public function getModifiableProperties()
     {
@@ -118,6 +134,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
      * None, all or partial list of properties
      *
      * @return array List of writable properties
+     * @throws PropelException
      */
     public function getRequiredWritableProperties()
     {
@@ -128,6 +145,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
      * None, all or partial list of properties
      *
      * @return array List of writable properties
+     * @throws PropelException
      */
     public function getWritableProperties()
     {
@@ -137,10 +155,11 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     /**
      * Hydrates an ActiveRecord with filtered Request params
      *
-     * @param array  $requestParams
+     * @param array $requestParams
      * @param string $httpMethod
      *
      * @return array
+     * @throws PropelException
      */
     final public function getAllowedDataFromRequest(array $requestParams, $httpMethod)
     {
@@ -171,6 +190,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
      * Adds visible fields, and remove hidden Properties
      *
      * @return array List of visible properties
+     * @throws PropelException
      */
     final public function getExposedProperties()
     {
@@ -310,6 +330,14 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
     }
 
     /**
+     * All properties of ActiveRecord
+     *
+     * @return array
+     * @throws PropelException
+     */
+    abstract protected function getAllProperties();
+
+    /**
      * @param TableMap $tableMap
      */
     final protected function buildRelations(TableMap $tableMap)
@@ -340,6 +368,7 @@ abstract class EntityRequestAbstract implements EntityRequestInterface
      * None, all or partial list of fields
      *
      * @return array List of visible properties
+     * @throws PropelException
      */
     protected function getVisibleFields()
     {

@@ -12,6 +12,8 @@ use Eukles\Action\ActionInterface;
 use Eukles\Container\ContainerInterface;
 use Eukles\Container\ContainerTrait;
 use Eukles\Util\PksFinder;
+use Propel\Runtime\ActiveQuery\ModelCriteria;
+use Propel\Runtime\Exception\PropelException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Http\Response;
@@ -53,7 +55,7 @@ class EntityFactory implements EntityFactoryInterface
         $obj = $entityRequest->instantiateActiveRecord();
 
         # Execute beforeCreate hook, which can alter record
-        $entityRequest->beforeCreate($obj);
+        $entityRequest->beforeCreate($obj, $request);
 
         # Then, alter object with allowed properties
         if ($config->isHydrateEntityFromRequest()) {
@@ -68,7 +70,7 @@ class EntityFactory implements EntityFactoryInterface
         }
 
         # Execute afterCreate hook, which can alter record
-        $entityRequest->afterCreate($obj);
+        $entityRequest->afterCreate($obj, $request);
 
         $request = $request->withAttribute($config->getParameterToInjectInto(), $obj);
         /** @var Response $response */
@@ -102,7 +104,7 @@ class EntityFactory implements EntityFactoryInterface
         $query = $this->getQueryFromActiveRecordRequest($entityRequest);
 
         # Execute beforeFetch hook, which can enforce primary key
-        $query = $entityRequest->beforeFetch($query);
+        $query = $entityRequest->beforeFetch($query, $request);
 
         # Now get the primary key in its final form
         $pk = $entityRequest->getPrimaryKey();
@@ -135,7 +137,7 @@ class EntityFactory implements EntityFactoryInterface
         }
 
         # Then, execute afterFetch hook, which can alter the object
-        $entityRequest->afterFetch($obj);
+        $entityRequest->afterFetch($obj, $request);
 
         $request = $request->withAttribute($config->getParameterToInjectInto(), $obj);
 
@@ -145,13 +147,14 @@ class EntityFactory implements EntityFactoryInterface
     /**
      * Fetch an existing collection of activeRecords and add it to Request attributes
      *
-     * @param EntityRequestInterface       $entityRequest
-     * @param ServerRequestInterface       $request
-     * @param ResponseInterface            $response
-     * @param callable                     $next
+     * @param EntityRequestInterface $entityRequest
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @param callable $next
      * @param                              $nameOfParameterToAdd
      *
      * @return ResponseInterface
+     * @throws PropelException
      */
     public function fetchCollection(
         EntityRequestInterface $entityRequest,
@@ -213,7 +216,7 @@ class EntityFactory implements EntityFactoryInterface
      *
      * @param EntityRequestInterface $activeRecordRequest
      *
-     * @return \Propel\Runtime\ActiveQuery\ModelCriteria
+     * @return ModelCriteria
      */
     private function getQueryFromActiveRecordRequest(
         EntityRequestInterface $activeRecordRequest
