@@ -10,6 +10,7 @@ namespace Eukles\Entity\Middleware;
 
 use Eukles\Container\ContainerInterface;
 use Eukles\Container\ContainerTrait;
+use Eukles\Entity\EntityRequestInterface;
 use Eukles\Service\Router\RouteInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -50,9 +51,11 @@ class CollectionFetch /*implements RouteEntityMiddlewareInterface*/
     public function __invoke($request, $response, $next): ResponseInterface
     {
         $requestClass = $this->route->getRequestClass();
-        /** @var ContainerInterface $this */
+        /** @var EntityRequestInterface $requestClassInstance */
+        $requestClassInstance = new $requestClass($request);
+        $requestClassInstance->setContainer($this->getContainer());
         $response = $this->container->getEntityFactory()->fetchCollection(
-            new $requestClass($this->container),
+            $requestClassInstance,
             $request,
             $response,
             $next,

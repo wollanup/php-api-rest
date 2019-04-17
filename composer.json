@@ -37,6 +37,6 @@
     "slim/slim": "3.*"
   },
   "conflict": {
-    "wollanup/php-api-rest-swagger": "<0.1"
+    "wollanup/php-api-rest-swagger": "<0.1.3"
   }
 }
