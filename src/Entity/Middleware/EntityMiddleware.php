@@ -51,12 +51,22 @@ class EntityMiddleware implements RouteEntityMiddlewareInterface
     public function __invoke($request, $response, $next): ResponseInterface
     {
         if ($this->config->isTypeFetch()) {
-            return $this->getContainer()->getEntityFactory()->fetch(
-                $this->config,
-                $request,
-                $response,
-                $next
-            );
+            if($this->config->isTypeCollection()){
+                return $this->getContainer()->getEntityFactory()->fetchCollection(
+                    $this->config,
+                    $request,
+                    $response,
+                    $next
+                );
+            }
+            else {
+                return $this->getContainer()->getEntityFactory()->fetch(
+                    $this->config,
+                    $request,
+                    $response,
+                    $next
+                );
+            }
         } elseif ($this->config->isTypeCreate()) {
             return $this->getContainer()->getEntityFactory()->create(
                 $this->config,

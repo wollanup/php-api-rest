@@ -13,6 +13,7 @@ use Eukles\Container\ContainerInterface;
 use Eukles\Container\ContainerTrait;
 use Eukles\Util\PksFinder;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
+use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Exception\PropelException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -147,66 +148,79 @@ class EntityFactory implements EntityFactoryInterface
     /**
      * Fetch an existing collection of activeRecords and add it to Request attributes
      *
-     * @param EntityRequestInterface $entityRequest
+     * @param EntityFactoryConfig $config
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
      * @param callable $next
-     * @param                              $nameOfParameterToAdd
-     *
      * @return ResponseInterface
      * @throws PropelException
      */
     public function fetchCollection(
-        EntityRequestInterface $entityRequest,
+        EntityFactoryConfig $config,
         ServerRequestInterface $request,
         ResponseInterface $response,
-        callable $next,
-        $nameOfParameterToAdd = null
+        callable $next
     ): ResponseInterface {
 
+        $entityRequest = $config->createEntityRequest($request, $this->container);
+
+        $params = $request->getQueryParams();
+        $pkName = $config->getRequestParameterName();
         $pks = [];
-        if ($request->getMethod() === 'GET') {
-            # GET : Try to find PKs in query
-            $params = $request->getQueryParams();
-            if (array_key_exists('id', $params)) {
-                $pks = $params['id'];
-            }
-        } else {
+
+        if (array_key_exists($pkName, $params)) {
+            $pks = $params[$pkName];
+        }
+        if(is_string($pks)){
+            $pks = json_decode($pks, true);
+        }
+       if(!$pks && in_array($request->getMethod(), ['POST', 'PATCH', 'PUT'])){
             # POST/PATCH : Try to find PKs in body
             if (is_array($request->getParsedBody())) {
-                $finder = new PksFinder(['id']);
+                $finder = new PksFinder([$pkName]);
                 $pks    = $finder->find($request->getParsedBody());
             }
         }
+       
+        $entityRequest->setPrimaryKey($pks);
 
         # Next, we create the query (ModelCriteria), based on Action class (which can alter the query)
         $query = $this->getQueryFromActiveRecordRequest($entityRequest);
 
-        if (empty($pks)) {
-            $handler = $entityRequest->getContainer()
-                ->getEntityRequestErrorHandler();
+        # Execute beforeFetch hook, which can enforce primary key
+        $query = $entityRequest->beforeFetch($query, $request);
+
+        # Now get the primary key in its final form
+        $pk = $entityRequest->getPrimaryKey();
+        if (null === $pk) {
+            $handler = $entityRequest->getContainer()->getEntityRequestErrorHandler();
 
             return $handler->primaryKeyNotFound($entityRequest, $request,
                 $response);
         }
 
         # Then, fetch object
+        /** @var ObjectCollection $col */
         $col = $query->findPks($pks);
 
-        if ($col === null) {
-            $handler = $entityRequest->getContainer()
-                ->getEntityRequestErrorHandler();
-
-            return $handler->entityNotFound($entityRequest, $request,
-                $response);
+        # Get request params
+        if ($config->isHydrateEntityFromRequest()) {
+            //TODO
+            throw new \RuntimeException('Collection hydration is not supported yet.');
+            //            $params     = $request->getQueryParams();
+            //            $postParams = $request->getParsedBody();
+            //            if ($postParams) {
+            //                $params = array_merge($params, (array)$postParams);
+            //            }
+            //
+            //            # Then, alter object with allowed properties
+            //            $col->fromArray($entityRequest->getAllowedDataFromRequest($params, $request->getMethod()));
         }
 
-        # Finally, build name of parameter to inject in action method, will be used later
-        if ($nameOfParameterToAdd === null) {
-            $nameOfParameterToAdd
-                = $entityRequest->getNameOfParameterToAdd(true);
-        }
-        $request = $request->withAttribute($nameOfParameterToAdd, $col);
+        # Then, execute afterFetch hook, which can alter the object
+        //        $entityRequest->afterFetchCollection($col, $request);
+
+        $request = $request->withAttribute($config->getParameterToInjectInto(), $col);
 
         return $next($request, $response);
     }

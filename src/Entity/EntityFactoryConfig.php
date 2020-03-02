@@ -17,12 +17,6 @@ class EntityFactoryConfig
     const TYPE_FETCH = 'fetch';
     const TYPE_CREATE = 'create';
     /**
-     * Instance creation method
-     *
-     * @var array
-     */
-    protected static $types = [self::TYPE_CREATE, self::TYPE_FETCH];
-    /**
      * Entity Request class used to instantiate and hydrate Entity
      *
      * @var EntityRequestInterface
@@ -50,15 +44,26 @@ class EntityFactoryConfig
      * @var string
      */
     protected $type;
+    /**
+     * @var bool
+     */
+    protected $typeCollection = false;
+    /**
+     * Instance creation method
+     *
+     * @var array
+     */
+    protected static $types = [self::TYPE_CREATE, self::TYPE_FETCH];
 
     /**
-     * Constructor wrapper
-     *
-     * @return EntityFactoryConfig
+     * @param bool $true
+     * @return $this
      */
-    public static function create()
+    public function setTypeCollection(bool $true = true): EntityFactoryConfig
     {
-        return new self();
+        $this->typeCollection = $true;
+
+        return $this;
     }
 
     /**
@@ -67,24 +72,6 @@ class EntityFactoryConfig
     public function getEntityRequest(): string
     {
         return $this->entityRequest;
-    }
-
-    /**
-     * @param RequestInterface $request
-     * @param ContainerInterface $container
-     *
-     * @return EntityRequestInterface
-     */
-    public function createEntityRequest(
-        RequestInterface $request,
-        ContainerInterface $container
-    ): EntityRequestInterface
-    {
-        /** @var EntityRequestInterface $er */
-        $er = new $this->entityRequest($request);
-        $er->setContainer($container);
-
-        return $er;
     }
 
     /**
@@ -97,6 +84,23 @@ class EntityFactoryConfig
         $this->entityRequest = $entityRequestClass;
 
         return $this;
+    }
+
+    /**
+     * @param RequestInterface $request
+     * @param ContainerInterface $container
+     *
+     * @return EntityRequestInterface
+     */
+    public function createEntityRequest(
+        RequestInterface $request,
+        ContainerInterface $container
+    ): EntityRequestInterface {
+        /** @var EntityRequestInterface $er */
+        $er = new $this->entityRequest($request);
+        $er->setContainer($container);
+
+        return $er;
     }
 
     /**
@@ -235,5 +239,23 @@ class EntityFactoryConfig
                 'Config must have a parameter name for inject entity in action method'
             );
         }
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTypeCollection(): bool
+    {
+        return $this->typeCollection;
+    }
+
+    /**
+     * Constructor wrapper
+     *
+     * @return EntityFactoryConfig
+     */
+    public static function create(): EntityFactoryConfig
+    {
+        return new self();
     }
 }

@@ -75,6 +75,15 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
     public function fetchEntity(EntityFactoryConfig $config): RouteInterface;
 
     /**
+     * Route will fetch a collection of entities entity based on given EntityFactoryConfig object
+     *
+     * @param EntityFactoryConfig $config
+     *
+     * @return RouteInterface
+     */
+    public function fetchCollection(EntityFactoryConfig $config): RouteInterface;
+
+    /**
      * @return string
      * @throws RouteEmptyValueException
      */
@@ -169,18 +178,6 @@ interface RouteInterface extends \Slim\Interfaces\RouteInterface
      * @return bool
      */
     public function isDeprecated(): bool;
-
-    /**
-     * @return bool
-     */
-    public function isMakeCollection(): bool;
-
-    /**
-     * @param bool $forceFetch
-     *
-     * @return RouteInterface
-     */
-    public function makeCollection(bool $forceFetch = false): RouteInterface;
 
     /**
      * @param bool $forceFetch
