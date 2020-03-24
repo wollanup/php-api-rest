@@ -174,14 +174,14 @@ class EntityFactory implements EntityFactoryInterface
         if(is_string($pks)){
             $pks = json_decode($pks, true);
         }
-       if(!$pks && in_array($request->getMethod(), ['POST', 'PATCH', 'PUT'])){
+       if(!$pks && in_array($request->getMethod(), ['POST', 'PATCH', 'PUT', 'DELETE'])){
             # POST/PATCH : Try to find PKs in body
             if (is_array($request->getParsedBody())) {
                 $finder = new PksFinder([$pkName]);
                 $pks    = $finder->find($request->getParsedBody());
             }
         }
-       
+
         $entityRequest->setPrimaryKey($pks);
 
         # Next, we create the query (ModelCriteria), based on Action class (which can alter the query)
