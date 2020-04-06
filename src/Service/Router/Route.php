@@ -13,7 +13,6 @@ use Eukles\Container\ContainerTrait;
 use Eukles\Entity\EntityFactoryConfig;
 use Eukles\Entity\EntityFactoryConfigException as EntityFactoryConfigExceptionAlias;
 use Eukles\Entity\EntityRequestInterface;
-use Eukles\Entity\Middleware\CollectionFetch;
 use Eukles\Entity\Middleware\EntityMiddleware;
 use Eukles\RouteMap\RouteMapInterface;
 use Eukles\Service\Router\Exception\RouteEmptyValueException;
@@ -21,6 +20,8 @@ use Eukles\Service\Router\Middleware\SuccessHeaderLocationMiddleware;
 use Eukles\Service\Router\Middleware\SuccessStatusMiddleware;
 use Eukles\Slim\DeferredCallable;
 use InvalidArgumentException;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
 use Zend\Permissions\Acl\Role\GenericRole;
 use Zend\Permissions\Acl\Role\RoleInterface;
@@ -109,6 +110,17 @@ class Route extends \Slim\Route implements RouteInterface
         $this->methods = array_map("strtoupper", $this->methods);
     }
 
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response)
+    {
+        if (!$this->container instanceof \Psr\Container\ContainerInterface) {
+            throw new RuntimeException("Container is required to invoke Route");
+        }
+        $class = $this->getActionClass();
+        $this->callable = [new $class($this->container), $this->getActionMethod()];
+
+        return parent::__invoke($request, $response);
+    }
+
     /**
      * @param int $status
      * @param string $description
@@ -137,9 +149,6 @@ class Route extends \Slim\Route implements RouteInterface
      */
     public function bindToRouter(RouterInterface $router)
     {
-        $this->callable = sprintf('%s:%s', $this->getActionClass(),
-            $this->getActionMethod());
-
         $router->addResourceRoute($this);
     }
 
