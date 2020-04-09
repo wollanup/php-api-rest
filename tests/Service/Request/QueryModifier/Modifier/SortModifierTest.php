@@ -12,9 +12,11 @@
 namespace Eukles\Service\RequestQueryModifier\Base;
 
 use Eukles\Service\Request\QueryModifier\Modifier\SortModifier;
-use Eukles\Test\Util\Request;
+use ModifierTest;
+use ModifierTestQuery;
 use PHPUnit\Framework\TestCase;
 use Propel\Generator\Util\QuickBuilder;
+use Test\Eukles\Request;
 
 /**
  * Class SortModifierTest
@@ -26,7 +28,7 @@ class SortModifierTest extends TestCase
 
     public function setUp()
     {
-        if (!class_exists(\ModifierTest::class)) {
+        if (!class_exists(ModifierTest::class)) {
 
             $b = new QuickBuilder;
             $b->setSchema('
@@ -53,30 +55,30 @@ class SortModifierTest extends TestCase
 
     public function testApplyAsc()
     {
-        $m  = new SortModifier(new Request(["sort" => json_encode(["property" => "name", "direction" => "asc"])]));
-        $mc = new \ModifierTestQuery();
+        $m = new SortModifier(new Request(["sort" => json_encode(["property" => "name", "direction" => "asc"])]));
+        $mc = new ModifierTestQuery();
         $m->apply($mc);
         $this->assertEquals('modifier_test.name ASC', $mc->getOrderByColumns()[0]);
     }
 
     public function testApplyDesc()
     {
-        $m  = new SortModifier(new Request(["sort" => json_encode(["property" => "name", "direction" => "desc"])]));
-        $mc = new \ModifierTestQuery();
+        $m = new SortModifier(new Request(["sort" => json_encode(["property" => "name", "direction" => "desc"])]));
+        $mc = new ModifierTestQuery();
         $m->apply($mc);
         $this->assertEquals('modifier_test.name DESC', $mc->getOrderByColumns()[0]);
     }
 
     public function testApplyMulti()
     {
-        $m  = new SortModifier(new Request([
+        $m = new SortModifier(new Request([
             "sort" => json_encode([
                     ["property" => "name", "direction" => "asc"],
                     ["property" => "column2", "direction" => "asc"],
                 ]
             ),
         ]));
-        $mc = new \ModifierTestQuery();
+        $mc = new ModifierTestQuery();
         $m->apply($mc);
         $this->assertEquals('modifier_test.name ASC', $mc->getOrderByColumns()[0]);
         $this->assertEquals('modifier_test.column2 ASC', $mc->getOrderByColumns()[1]);
@@ -103,16 +105,16 @@ class SortModifierTest extends TestCase
 
     public function testApplyOnInexistentField()
     {
-        $m  = new SortModifier(new Request(["sort" => json_encode(["property" => "notFound"])]));
-        $mc = new \ModifierTestQuery();
+        $m = new SortModifier(new Request(["sort" => json_encode(["property" => "notFound"])]));
+        $mc = new ModifierTestQuery();
         $m->apply($mc);
         $this->assertEquals([], $mc->getOrderByColumns());
     }
 
     public function testApplyWithoutDirectionIsDesc()
     {
-        $m  = new SortModifier(new Request(["sort" => json_encode(["property" => "name"])]));
-        $mc = new \ModifierTestQuery();
+        $m = new SortModifier(new Request(["sort" => json_encode(["property" => "name"])]));
+        $mc = new ModifierTestQuery();
         $m->apply($mc);
         $this->assertEquals('modifier_test.name DESC', $mc->getOrderByColumns()[0]);
     }
@@ -125,26 +127,26 @@ class SortModifierTest extends TestCase
 
     public function testInexistentRelation()
     {
-        $m  = new SortModifier(new Request([
+        $m = new SortModifier(new Request([
             "sort" => json_encode([
                 "property"  => "RelationNotFound.Name",
                 "direction" => "asc",
             ]),
         ]));
-        $mc = new \ModifierTestQuery();
+        $mc = new ModifierTestQuery();
         $m->apply($mc);
         $this->assertEquals([], $mc->getOrderByColumns());
     }
 
     public function testRelation()
     {
-        $m  = new SortModifier(new Request([
+        $m = new SortModifier(new Request([
             "sort" => json_encode([
                 "property"  => "RelationTest.Name",
                 "direction" => "asc",
             ]),
         ]));
-        $mc = new \ModifierTestQuery();
+        $mc = new ModifierTestQuery();
         $mc->joinWithRelationTest();
         $m->apply($mc);
         $this->assertEquals('relation_test.name ASC', $mc->getOrderByColumns()[0]);
@@ -152,13 +154,13 @@ class SortModifierTest extends TestCase
 
     public function testRelationWithSlash()
     {
-        $m  = new SortModifier(new Request([
+        $m = new SortModifier(new Request([
             "sort" => json_encode([
                 "property"  => "RelationTest/Name",
                 "direction" => "asc",
             ]),
         ]));
-        $mc = new \ModifierTestQuery();
+        $mc = new ModifierTestQuery();
         $mc->joinWithRelationTest();
         $m->apply($mc);
         $this->assertEquals('relation_test.name ASC', $mc->getOrderByColumns()[0]);

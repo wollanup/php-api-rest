@@ -6,8 +6,9 @@
  * Time: 11:07
  */
 
-namespace Eukles\Test\Util;
+namespace Test\Eukles;
 
+use InvalidArgumentException;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
@@ -334,11 +335,11 @@ class Request implements ServerRequestInterface
      * immutability of the message, and MUST return an instance that has the
      * new header and/or value.
      *
-     * @param string          $name  Case-insensitive header field name to add.
+     * @param string $name Case-insensitive header field name to add.
      * @param string|string[] $value Header value(s).
      *
      * @return static
-     * @throws \InvalidArgumentException for invalid header names or values.
+     * @throws InvalidArgumentException for invalid header names or values.
      */
     public function withAddedHeader($name, $value)
     {
@@ -379,7 +380,7 @@ class Request implements ServerRequestInterface
      * @param StreamInterface $body Body.
      *
      * @return static
-     * @throws \InvalidArgumentException When the body is not valid.
+     * @throws InvalidArgumentException When the body is not valid.
      */
     public function withBody(StreamInterface $body)
     {
@@ -419,11 +420,11 @@ class Request implements ServerRequestInterface
      * immutability of the message, and MUST return an instance that has the
      * new and/or updated header and value.
      *
-     * @param string          $name  Case-insensitive header field name.
+     * @param string $name Case-insensitive header field name.
      * @param string|string[] $value Header value(s).
      *
      * @return static
-     * @throws \InvalidArgumentException for invalid header names or values.
+     * @throws InvalidArgumentException for invalid header names or values.
      */
     public function withHeader($name, $value)
     {
@@ -444,7 +445,7 @@ class Request implements ServerRequestInterface
      * @param string $method Case-sensitive method.
      *
      * @return static
-     * @throws \InvalidArgumentException for invalid HTTP methods.
+     * @throws InvalidArgumentException for invalid HTTP methods.
      */
     public function withMethod($method)
     {
@@ -477,7 +478,7 @@ class Request implements ServerRequestInterface
      *                                typically be in an array or object.
      *
      * @return static
-     * @throws \InvalidArgumentException if an unsupported argument type is
+     * @throws InvalidArgumentException if an unsupported argument type is
      *     provided.
      */
     public function withParsedBody($data)
@@ -566,7 +567,7 @@ class Request implements ServerRequestInterface
      * @param array $uploadedFiles An array tree of UploadedFileInterface instances.
      *
      * @return static
-     * @throws \InvalidArgumentException if an invalid structure is provided.
+     * @throws InvalidArgumentException if an invalid structure is provided.
      */
     public function withUploadedFiles(array $uploadedFiles)
     {

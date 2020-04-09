@@ -12,9 +12,9 @@
 namespace Eukles\Service\RequestQueryModifier;
 
 use Eukles\Service\Request\QueryModifier\RequestQueryModifier;
-use Eukles\Test\Util\Request;
 use PHPUnit\Framework\TestCase;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
+use Test\Eukles\Request;
 
 /**
  * Class RequestQueryModifierTest

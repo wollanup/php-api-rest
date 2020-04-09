@@ -17,15 +17,12 @@
   "autoload-dev": {
     "psr-4": {
       "Test\\Eukles\\": "tests/",
-      "Eukles\\": "tests/",
-      "Util\\": "tests/util/",
-      "Eukles\\Test\\Util\\": "tests/util/"
+      "Eukles\\": "tests/"
     }
   },
   "require": {
       "php": ">=7.0",
       "ext-json": "*",
-      "wollanup/php-api-rest-utils": "^1.1",
       "crell/api-problem": "^2.0",
       "akrabat/rka-content-type-renderer": "^0.7.3",
       "vlucas/phpdotenv": "^2.4",
@@ -38,6 +35,6 @@
     "slim/slim": "3.*"
   },
   "conflict": {
-    "wollanup/php-api-rest-swagger": "<0.1.3"
+    "wollanup/php-api-rest-swagger": "<0.1.6"
   }
 }
