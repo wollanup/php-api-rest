@@ -10,8 +10,8 @@ namespace Service\Request\Pagination;
 
 use Eukles\Service\Pagination\PaginationInterface;
 use Eukles\Service\Request\Pagination\RequestPagination;
-use Eukles\Test\Util\Request;
 use PHPUnit\Framework\TestCase;
+use Test\Eukles\Request;
 
 class RequestPaginationTest extends TestCase
 {

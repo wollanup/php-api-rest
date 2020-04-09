@@ -12,8 +12,10 @@
 namespace Eukles\Service\RequestQueryModifier\Base;
 
 use Eukles\Service\Request\QueryModifier\Modifier\Base\ModifierBase;
-use Eukles\Test\Util\Request;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use PHPUnit_Framework_MockObject_InvocationMocker;
+use Test\Eukles\Request;
 
 /**
  * Class ModifierTestBase
@@ -24,13 +26,13 @@ class ModifierBaseTest extends TestCase
 {
 
     /**
-     * @var ModifierBase|\PHPUnit_Framework_MockObject_InvocationMocker $modifier
+     * @var ModifierBase|PHPUnit_Framework_MockObject_InvocationMocker $modifier
      */
     protected $modifier = null;
 
     public function setUp()
     {
-        /** @var ModifierBase|\PHPUnit_Framework_MockObject_InvocationMocker $modifier */
+        /** @var ModifierBase|PHPUnit_Framework_MockObject_InvocationMocker $modifier */
         $this->modifier = $this->getMockForAbstractClass(ModifierBase::class, [new Request()]);
 
         $this->modifier->expects($this->any())
@@ -57,7 +59,7 @@ class ModifierBaseTest extends TestCase
         $r = new Request(["test" => json_encode(["property" => "name"])]);
         $this->modifier->setModifierFromRequest($r);
         $this->assertEquals(["property" => "name"], $this->modifier->getModifier('name'));
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->modifier->getModifier('otherName');
     }
 

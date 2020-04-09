@@ -13,11 +13,13 @@ namespace Eukles\Service\RequestQueryModifier\Base;
 
 use Eukles\Service\QueryModifier\Modifier\Exception\ModifierException;
 use Eukles\Service\Request\QueryModifier\Modifier\FilterModifier;
-use Eukles\Test\Util\Request;
+use ModifierTest;
+use ModifierTestQuery;
 use PHPUnit\Framework\TestCase;
 use Propel\Generator\Util\QuickBuilder;
 use Propel\Runtime\ActiveQuery\Criterion\RawModelCriterion;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
+use Test\Eukles\Request;
 
 /**
  * Class FilterModifierTest
@@ -29,7 +31,7 @@ class FilterModifierTest extends TestCase
 
     public function setUp()
     {
-        if (!class_exists(\ModifierTest::class)) {
+        if (!class_exists(ModifierTest::class)) {
 
             $b = new QuickBuilder;
             $b->setSchema('
@@ -63,7 +65,7 @@ class FilterModifierTest extends TestCase
             ]),
         ]));
         /** @var ModelCriteria $mc */
-        $mc = new \ModifierTestQuery();
+        $mc = new ModifierTestQuery();
         $m->apply($mc);
         $this->assertArrayHasKey('.RelationTest.Name = ?', $mc->getMap());
         $criterion = $mc->getMap()['.RelationTest.Name = ?'];
@@ -81,7 +83,7 @@ class FilterModifierTest extends TestCase
             ]),
         ]));
         /** @var ModelCriteria $mc */
-        $mc = new \ModifierTestQuery();
+        $mc = new ModifierTestQuery();
         $m->apply($mc);
         $this->assertArrayHasKey('modifier_test.name', $mc->getMap());
         /** @var RawModelCriterion $criterion */
@@ -101,7 +103,7 @@ class FilterModifierTest extends TestCase
             ]),
         ]));
         /** @var ModelCriteria $mc */
-        $mc = new \ModifierTestQuery();
+        $mc = new ModifierTestQuery();
         $this->expectException(ModifierException::class);
         $m->apply($mc);
     }
@@ -116,7 +118,7 @@ class FilterModifierTest extends TestCase
             ]),
         ]));
         /** @var ModelCriteria $mc */
-        $mc = new \ModifierTestQuery();
+        $mc = new ModifierTestQuery();
         $m->apply($mc);
         $this->assertArrayHasKey('modifier_test.name', $mc->getMap());
         /** @var RawModelCriterion $criterion */
@@ -135,7 +137,7 @@ class FilterModifierTest extends TestCase
             ]),
         ]));
         /** @var ModelCriteria $mc */
-        $mc = new \ModifierTestQuery();
+        $mc = new ModifierTestQuery();
         $m->apply($mc);
         $this->assertArrayNotHasKey('modifier_test.name', $mc->getMap());
     }
@@ -149,7 +151,7 @@ class FilterModifierTest extends TestCase
             ]),
         ]));
         /** @var ModelCriteria $mc */
-        $mc = new \ModifierTestQuery();
+        $mc = new ModifierTestQuery();
         $m->apply($mc);
         $this->assertArrayNotHasKey('modifier_test.name', $mc->getMap());
     }
@@ -169,7 +171,7 @@ class FilterModifierTest extends TestCase
             ]),
         ]));
         /** @var ModelCriteria $mc */
-        $mc = new \ModifierTestQuery();
+        $mc = new ModifierTestQuery();
         $m->apply($mc);
         $this->assertArrayHasKey('modifier_test.name', $mc->getMap());
         /** @var RawModelCriterion $criterion */
@@ -189,7 +191,7 @@ class FilterModifierTest extends TestCase
             ]),
         ]));
         /** @var ModelCriteria $mc */
-        $mc = new \ModifierTestQuery();
+        $mc = new ModifierTestQuery();
         $m->apply($mc);
         $this->assertArrayHasKey('modifier_test.name', $mc->getMap());
         /** @var RawModelCriterion $criterion */
@@ -209,7 +211,7 @@ class FilterModifierTest extends TestCase
             ]),
         ]));
         /** @var ModelCriteria $mc */
-        $mc = new \ModifierTestQuery();
+        $mc = new ModifierTestQuery();
         $m->apply($mc);
         $this->assertArrayHasKey('modifier_test.name', $mc->getMap());
         /** @var RawModelCriterion $criterion */
@@ -228,7 +230,7 @@ class FilterModifierTest extends TestCase
             ]),
         ]));
         /** @var ModelCriteria $mc */
-        $mc = new \ModifierTestQuery();
+        $mc = new ModifierTestQuery();
         $m->apply($mc);
         $this->assertArrayHasKey('modifier_test.name', $mc->getMap());
         /** @var RawModelCriterion $criterion */
