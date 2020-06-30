@@ -115,10 +115,11 @@ class UseQueryFromDotNotation
 
     /**
      * @param null $alias
+     * @param string $joinType
      * @return ModelCriteria
      * @throws UseQueryFromDotNotationException
      */
-    public function useQuery($alias = null): ModelCriteria
+    public function useQuery($alias = null, $joinType = null): ModelCriteria
     {
         if ($this->inUse) {
             throw new UseQueryFromDotNotationException("A query is already in use and have not be terminated with UseQueryFromDotNotation::endUse()");
@@ -131,7 +132,7 @@ class UseQueryFromDotNotation
                     $path = implode(self::RELATION_SEP, $this->map);
                     throw new RelationNotFoundException("Relation \"$relation\" Not Found in \"$path\"");
                 }
-                $this->query = call_user_func([$this->query, $method], $alias  . "_" . $relation);
+                $this->query = call_user_func([$this->query, $method], $alias . "_" . $relation, $joinType);
             }
         }
         $this->inUse = true;
