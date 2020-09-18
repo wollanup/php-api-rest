@@ -11,6 +11,8 @@
 
 namespace Eukles\Service\Request\QueryModifier\Modifier;
 
+use Eukles\Service\QueryModifier\Easy\Builder\Filter;
+use Eukles\Service\QueryModifier\Easy\Modifier;
 use Eukles\Service\QueryModifier\Modifier\Exception\ModifierException;
 use Eukles\Service\Request\QueryModifier\Modifier\Base\ModifierBase;
 use Propel\Runtime\ActiveQuery\Criteria;
@@ -40,6 +42,7 @@ class FilterModifier extends ModifierBase
             Criteria::GREATER_THAN,
             Criteria::LESS_EQUAL,
             Criteria::LESS_THAN,
+            Criteria::IN,
             Criteria::NOT_IN,
             Criteria::LIKE,
             Criteria::NOT_LIKE,
@@ -79,38 +82,37 @@ class FilterModifier extends ModifierBase
     }
 
     /**
+     * Apply the filter to the ModelQuery
+     *
+     * @param \Propel\Runtime\ActiveQuery\ModelCriteria $query
+     */
+    public function apply(ModelCriteria $query)
+    {
+        $modifierClass = new Modifier($query);
+        if (!empty($this->modifiers)) {
+            foreach ($this->modifiers as $modifier) {
+                if ($this->hasAllRequiredData($modifier)) {
+                    $operator = null;
+                    if ($modifier['value'] === null) {
+                        if (!array_key_exists('operator', $modifier) || $modifier['operator'] === Criteria::EQUAL) {
+                            $operator = Criteria::ISNULL;
+                        } else {
+                            $operator = Criteria::ISNOTNULL;
+                        }
+                    }
+
+                    $modifierClass->filterBy($modifier['property'], $modifier['value'], $operator);
+
+                }
+            }
+        }
+    }
+
+    /**
      * @inheritdoc
      */
     protected function applyModifier(ModelCriteria $query, $clause, array $modifier)
     {
-        # Apply filter on the last related model query
-        if ($modifier['value'] === null) {
-            if (!array_key_exists('operator', $modifier) || $modifier['operator'] === Criteria::EQUAL) {
-                $modifier['operator'] = Criteria::ISNULL;
-            } else {
-                $modifier['operator'] = Criteria::ISNOTNULL;
-            }
-
-            $query->where(
-                sprintf(
-                    '%s %s',
-                    $clause,
-                    (array_key_exists('operator', $modifier) ? $modifier['operator'] : Criteria::EQUAL)
-                ),
-                $modifier['value'],
-                \PDO::PARAM_STR
-            );
-        } else {
-            $query->where(
-                sprintf(
-                    '%s %s ?',
-                    $clause,
-                    (array_key_exists('operator', $modifier) ? $modifier['operator'] : Criteria::EQUAL)
-                ),
-                $modifier['value'],
-                \PDO::PARAM_STR
-            );
-        }
     }
 
     /**

@@ -17,6 +17,7 @@ use ModifierTest;
 use ModifierTestQuery;
 use PHPUnit\Framework\TestCase;
 use Propel\Generator\Util\QuickBuilder;
+use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\Criterion\RawModelCriterion;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Test\Eukles\Request;
@@ -67,11 +68,12 @@ class FilterModifierTest extends TestCase
         /** @var ModelCriteria $mc */
         $mc = new ModifierTestQuery();
         $m->apply($mc);
-        $this->assertArrayHasKey('.RelationTest.Name = ?', $mc->getMap());
-        $criterion = $mc->getMap()['.RelationTest.Name = ?'];
+        $this->assertArrayHasKey('_relationTest.name', $mc->getMap());
+        $criterion = $mc->getMap()['_relationTest.name'];
         $this->assertEquals('bob', $criterion->getValue());
-        $this->assertNull($criterion->getComparison());
-        $this->assertEquals('RelationTest.Name = ?', $criterion->getColumn());
+        $this->assertEquals('=', $criterion->getComparison());
+        $this->assertEquals('_relationTest', $criterion->getTable());
+        $this->assertEquals('name', $criterion->getColumn());
     }
 
     public function testApplyWithValue()
@@ -89,8 +91,7 @@ class FilterModifierTest extends TestCase
         /** @var RawModelCriterion $criterion */
         $criterion = $mc->getMap()['modifier_test.name'];
         $this->assertEquals('test', $criterion->getValue());
-        $this->assertNull($criterion->getComparison());
-        $this->assertEquals('modifier_test.name = ?', $criterion->getClause());
+        $this->assertEquals('=', $criterion->getComparison());
     }
 
     public function testApplyWithValueAndInvalidOperator()
@@ -124,8 +125,7 @@ class FilterModifierTest extends TestCase
         /** @var RawModelCriterion $criterion */
         $criterion = $mc->getMap()['modifier_test.name'];
         $this->assertEquals('test', $criterion->getValue());
-        $this->assertNull($criterion->getComparison());
-        $this->assertEquals('modifier_test.name >= ?', $criterion->getClause());
+        $this->assertEquals('=', $criterion->getComparison());
     }
 
     public function testApplyWithoutProperty()
@@ -177,8 +177,7 @@ class FilterModifierTest extends TestCase
         /** @var RawModelCriterion $criterion */
         $criterion = $mc->getMap()['modifier_test.name'];
         $this->assertEquals('foo', $criterion->getValue());
-        $this->assertNull($criterion->getComparison());
-        $this->assertEquals('modifier_test.name = ?', $criterion->getClause());
+        $this->assertEquals('=', $criterion->getComparison());
     }
 
     public function testValueNullWithEqualsOperator()
@@ -197,8 +196,7 @@ class FilterModifierTest extends TestCase
         /** @var RawModelCriterion $criterion */
         $criterion = $mc->getMap()['modifier_test.name'];
         $this->assertNull($criterion->getValue());
-        $this->assertNull($criterion->getComparison());
-        $this->assertEquals('modifier_test.name  IS NULL', $criterion->getClause());
+        $this->assertEquals(Criteria::ISNULL, $criterion->getComparison());
     }
 
     public function testValueNullWithNotEqualsOperator()
@@ -217,8 +215,7 @@ class FilterModifierTest extends TestCase
         /** @var RawModelCriterion $criterion */
         $criterion = $mc->getMap()['modifier_test.name'];
         $this->assertNull($criterion->getValue());
-        $this->assertNull($criterion->getComparison());
-        $this->assertEquals('modifier_test.name  IS NOT NULL', $criterion->getClause());
+        $this->assertEquals(Criteria::ISNOTNULL, $criterion->getComparison());
     }
 
     public function testValueNullWithoutOperator()
@@ -236,7 +233,6 @@ class FilterModifierTest extends TestCase
         /** @var RawModelCriterion $criterion */
         $criterion = $mc->getMap()['modifier_test.name'];
         $this->assertNull($criterion->getValue());
-        $this->assertNull($criterion->getComparison());
-        $this->assertEquals('modifier_test.name  IS NULL', $criterion->getClause());
+        $this->assertEquals(Criteria::ISNULL, $criterion->getComparison());
     }
 }
