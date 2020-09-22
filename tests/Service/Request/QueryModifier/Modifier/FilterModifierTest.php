@@ -32,6 +32,12 @@ use Test\Eukles\Request;
 class FilterModifierTest extends TestCase
 {
 
+    /**
+     * Just to store the result of createSelectSql
+     * @var array
+     */
+    private $arr = [];
+
     public function setUp()
     {
         if (!class_exists(ModifierTest::class)) {
@@ -42,6 +48,7 @@ class FilterModifierTest extends TestCase
 	<table name="modifier_test">
 		<column name="name" type="VARCHAR"/>
 		<column name="column2" type="VARCHAR"/>
+		<column name="date" type="TIMESTAMP"/>
 		<column name="relation_id" type="INTEGER"/>
 		<foreign-key foreignTable="relation_test">
 			<reference local="relation_id" foreign="id"/>
@@ -71,18 +78,14 @@ class FilterModifierTest extends TestCase
         ]));
         /** @var ModelCriteria $mc */
         $mc = new ModifierTestQuery();
-        $modifier = $m->apply($mc);
-
+        $m->apply($mc);
         $this->assertArrayHasKey('_relationTest.name', $mc->getMap());
         $criterion = $mc->getMap()['_relationTest.name'];
         $this->assertEquals('bob', $criterion->getValue());
         $this->assertEquals(Criteria::NOT_EQUAL, $criterion->getComparison());
         $this->assertEquals('_relationTest', $criterion->getTable());
         $this->assertEquals('name', $criterion->getColumn());
-
-        $this->assertEquals($mc->toString(), "Criteria:
-SQL (may not be complete): SELECT  FROM modifier_test INNER JOIN relation_test _relationTest ON (modifier_test.relation_id=_relationTest.id) WHERE _relationTest.name<>:p1
-Params: relation_test.name => 'bob'");
+        $this->assertEquals($mc->createSelectSql($this->arr), "SELECT  FROM modifier_test INNER JOIN relation_test _relationTest ON (modifier_test.relation_id=_relationTest.id) WHERE _relationTest.name<>:p1");
     }
 
     public function testApplyWithValue()
@@ -101,10 +104,7 @@ Params: relation_test.name => 'bob'");
         $criterion = $mc->getMap()['modifier_test.name'];
         $this->assertEquals('test', $criterion->getValue());
         $this->assertEquals('=', $criterion->getComparison());
-        $this->assertEquals($mc->toString(), "Criteria:
-SQL (may not be complete): SELECT  FROM modifier_test WHERE modifier_test.name=:p1
-Params: modifier_test.name => 'test'");
-        //var_dump($mc->toString());
+        $this->assertEquals($mc->createSelectSql($this->arr), "SELECT  FROM modifier_test WHERE modifier_test.name=:p1");
     }
 
     public function testApplyWithValueAndInvalidOperator()
@@ -139,9 +139,7 @@ Params: modifier_test.name => 'test'");
         $criterion = $mc->getMap()['modifier_test.name'];
         $this->assertEquals('test', $criterion->getValue());
         $this->assertEquals('>=', $criterion->getComparison());
-        $this->assertEquals($mc->toString(), "Criteria:
-SQL (may not be complete): SELECT  FROM modifier_test WHERE modifier_test.name>=:p1
-Params: modifier_test.name => 'test'");
+        $this->assertEquals($mc->createSelectSql($this->arr), "SELECT  FROM modifier_test WHERE modifier_test.name>=:p1");
     }
 
     public function testApplyWithoutProperty()
@@ -198,9 +196,35 @@ Params: modifier_test.name => 'test'");
         $this->assertEquals('name', $criterion->getColumn());
         $this->assertEquals(["toto", "tata"], $criterion->getValue());
         $this->assertEquals(Criteria::IN, $criterion->getComparison());
-        $this->assertEquals($mc->toString(), "Criteria:
-SQL (may not be complete): SELECT  FROM modifier_test WHERE modifier_test.name IN (:p1,:p2)
-Params: modifier_test.name => 'toto', modifier_test.name => 'tata'");
+        $this->assertEquals($mc->createSelectSql($this->arr), "SELECT  FROM modifier_test WHERE modifier_test.name IN (:p1,:p2)");
+    }
+
+    public function testMinMax()
+    {
+        $m = new FilterModifier(new Request([
+        "filter" => json_encode([
+                "property" => "date",
+                "value"    => [
+                    "min" => "01-10-2020",
+                    "max" => "20-10-2020"
+                ],
+            ]),
+        ]));
+        /** @var ModelCriteria $mc */
+        $mc = new ModifierTestQuery();
+        $m->apply($mc);
+        $this->assertArrayHasKey('modifier_test.date', $mc->getMap());
+        /** @var RawModelCriterion $criterion */
+        $criterion = $mc->getMap()['modifier_test.date'];
+        $this->assertEquals('date', $criterion->getColumn());
+        $this->assertEquals("01-10-2020", $criterion->getValue());
+        $this->assertEquals(Criteria::GREATER_EQUAL, $criterion->getComparison());
+
+        $this->assertEquals(1,  count($criterion->getClauses()));
+        $this->assertEquals("20-10-2020", $criterion->getClauses()[0]->getValue());
+        $this->assertEquals("date", $criterion->getClauses()[0]->getColumn());
+        $this->assertEquals(Criteria::LESS_EQUAL, $criterion->getClauses()[0]->getComparison());
+        $this->assertEquals($mc->createSelectSql($this->arr), "SELECT  FROM modifier_test WHERE (modifier_test.date>=:p1 AND modifier_test.date<=:p2)");
     }
 
     public function testLike()
@@ -222,9 +246,7 @@ Params: modifier_test.name => 'toto', modifier_test.name => 'tata'");
         $this->assertEquals('%foo%', $criterion->getValue());
         $this->assertEquals(Criteria::LIKE, $criterion->getComparison());
 
-        $this->assertEquals($mc->toString(), "Criteria:
-SQL (may not be complete): SELECT  FROM modifier_test WHERE modifier_test.name LIKE :p1
-Params: modifier_test.name => '%foo%'");
+        $this->assertEquals($mc->createSelectSql($this->arr), "SELECT  FROM modifier_test WHERE modifier_test.name LIKE :p1");
     }
 
     public function testValue()
@@ -244,10 +266,7 @@ Params: modifier_test.name => '%foo%'");
         $this->assertEquals('name', $criterion->getColumn());
         $this->assertEquals('foo', $criterion->getValue());
         $this->assertEquals('=', $criterion->getComparison());
-
-        $this->assertEquals($mc->toString(), "Criteria:
-SQL (may not be complete): SELECT  FROM modifier_test WHERE modifier_test.name=:p1
-Params: modifier_test.name => 'foo'");
+        $this->assertEquals($mc->createSelectSql($this->arr), "SELECT  FROM modifier_test WHERE modifier_test.name=:p1");
     }
 
     public function testValueNullWithEqualsOperator()
@@ -267,10 +286,7 @@ Params: modifier_test.name => 'foo'");
         $criterion = $mc->getMap()['modifier_test.name'];
         $this->assertNull($criterion->getValue());
         $this->assertEquals(Criteria::ISNULL, $criterion->getComparison());
-
-        $this->assertEquals($mc->toString(), "Criteria:
-SQL (may not be complete): SELECT  FROM modifier_test WHERE modifier_test.name IS NULL 
-Params: ");
+        $this->assertEquals($mc->createSelectSql($this->arr), "SELECT  FROM modifier_test WHERE modifier_test.name IS NULL ");
     }
 
     public function testValueNullWithNotEqualsOperator()
@@ -290,9 +306,7 @@ Params: ");
         $criterion = $mc->getMap()['modifier_test.name'];
         $this->assertNull($criterion->getValue());
         $this->assertEquals(Criteria::ISNOTNULL, $criterion->getComparison());
-        $this->assertEquals($mc->toString(),"Criteria:
-SQL (may not be complete): SELECT  FROM modifier_test WHERE modifier_test.name IS NOT NULL 
-Params: ");
+        $this->assertEquals($mc->createSelectSql($this->arr),"SELECT  FROM modifier_test WHERE modifier_test.name IS NOT NULL ");
     }
 
     public function testValueNullWithoutOperator()
@@ -311,9 +325,6 @@ Params: ");
         $criterion = $mc->getMap()['modifier_test.name'];
         $this->assertNull($criterion->getValue());
         $this->assertEquals(Criteria::ISNULL, $criterion->getComparison());
-
-        $this->assertEquals($mc->toString(), "Criteria:
-SQL (may not be complete): SELECT  FROM modifier_test WHERE modifier_test.name IS NULL 
-Params: ");
+        $this->assertEquals($mc->createSelectSql($this->arr), "SELECT  FROM modifier_test WHERE modifier_test.name IS NULL ");
     }
 }
