@@ -20,6 +20,8 @@ use Propel\Generator\Util\QuickBuilder;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\Criterion\RawModelCriterion;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
+use Propel\Runtime\Adapter\Pdo\MysqlAdapter;
+use Propel\Runtime\Propel;
 use Test\Eukles\Request;
 
 /**
@@ -54,6 +56,7 @@ class FilterModifierTest extends TestCase
 </database>
 ');
             $b->buildClasses();
+            Propel::getServiceContainer()->setAdapter('modifier_test_db', new MysqlAdapter());
         }
     }
 
@@ -63,17 +66,23 @@ class FilterModifierTest extends TestCase
             "filter" => json_encode([
                 "property" => "relationTest.name",
                 "value"    => "bob",
+                "operator"    => "<>",
             ]),
         ]));
         /** @var ModelCriteria $mc */
         $mc = new ModifierTestQuery();
-        $m->apply($mc);
+        $modifier = $m->apply($mc);
+
         $this->assertArrayHasKey('_relationTest.name', $mc->getMap());
         $criterion = $mc->getMap()['_relationTest.name'];
         $this->assertEquals('bob', $criterion->getValue());
-        $this->assertEquals('=', $criterion->getComparison());
+        $this->assertEquals(Criteria::NOT_EQUAL, $criterion->getComparison());
         $this->assertEquals('_relationTest', $criterion->getTable());
         $this->assertEquals('name', $criterion->getColumn());
+
+        $this->assertEquals($mc->toString(), "Criteria:
+SQL (may not be complete): SELECT  FROM modifier_test INNER JOIN relation_test _relationTest ON (modifier_test.relation_id=_relationTest.id) WHERE _relationTest.name<>:p1
+Params: relation_test.name => 'bob'");
     }
 
     public function testApplyWithValue()
@@ -92,6 +101,10 @@ class FilterModifierTest extends TestCase
         $criterion = $mc->getMap()['modifier_test.name'];
         $this->assertEquals('test', $criterion->getValue());
         $this->assertEquals('=', $criterion->getComparison());
+        $this->assertEquals($mc->toString(), "Criteria:
+SQL (may not be complete): SELECT  FROM modifier_test WHERE modifier_test.name=:p1
+Params: modifier_test.name => 'test'");
+        //var_dump($mc->toString());
     }
 
     public function testApplyWithValueAndInvalidOperator()
@@ -125,7 +138,10 @@ class FilterModifierTest extends TestCase
         /** @var RawModelCriterion $criterion */
         $criterion = $mc->getMap()['modifier_test.name'];
         $this->assertEquals('test', $criterion->getValue());
-        $this->assertEquals('=', $criterion->getComparison());
+        $this->assertEquals('>=', $criterion->getComparison());
+        $this->assertEquals($mc->toString(), "Criteria:
+SQL (may not be complete): SELECT  FROM modifier_test WHERE modifier_test.name>=:p1
+Params: modifier_test.name => 'test'");
     }
 
     public function testApplyWithoutProperty()
@@ -162,6 +178,55 @@ class FilterModifierTest extends TestCase
         $this->assertEquals(FilterModifier::NAME, $m->getName());
     }
 
+    public function testInArray()
+    {
+        $m = new FilterModifier(new Request([
+            "filter" => json_encode([
+                "property" => "name",
+                "value"    => [
+                    "toto", "tata"
+                ],
+                "operator"    => 'IN',
+            ]),
+        ]));
+        /** @var ModelCriteria $mc */
+        $mc = new ModifierTestQuery();
+        $m->apply($mc);
+        $this->assertArrayHasKey('modifier_test.name', $mc->getMap());
+        /** @var RawModelCriterion $criterion */
+        $criterion = $mc->getMap()['modifier_test.name'];
+        $this->assertEquals('name', $criterion->getColumn());
+        $this->assertEquals(["toto", "tata"], $criterion->getValue());
+        $this->assertEquals(Criteria::IN, $criterion->getComparison());
+        $this->assertEquals($mc->toString(), "Criteria:
+SQL (may not be complete): SELECT  FROM modifier_test WHERE modifier_test.name IN (:p1,:p2)
+Params: modifier_test.name => 'toto', modifier_test.name => 'tata'");
+    }
+
+    public function testLike()
+    {
+        $m = new FilterModifier(new Request([
+            "filter" => json_encode([
+                "property" => "name",
+                "value"    => '%foo%',
+                "operator"    => 'LIKE',
+            ]),
+        ]));
+        /** @var ModelCriteria $mc */
+        $mc = new ModifierTestQuery();
+        $m->apply($mc);
+        $this->assertArrayHasKey('modifier_test.name', $mc->getMap());
+        /** @var RawModelCriterion $criterion */
+        $criterion = $mc->getMap()['modifier_test.name'];
+        $this->assertEquals('name', $criterion->getColumn());
+        $this->assertEquals('%foo%', $criterion->getValue());
+        $this->assertEquals(Criteria::LIKE, $criterion->getComparison());
+
+        $this->assertEquals($mc->toString(), "Criteria:
+SQL (may not be complete): SELECT  FROM modifier_test WHERE modifier_test.name LIKE :p1
+Params: modifier_test.name => '%foo%'");
+    }
+
     public function testValue()
     {
         $m = new FilterModifier(new Request([
@@ -176,8 +241,13 @@ class FilterModifierTest extends TestCase
         $this->assertArrayHasKey('modifier_test.name', $mc->getMap());
         /** @var RawModelCriterion $criterion */
         $criterion = $mc->getMap()['modifier_test.name'];
+        $this->assertEquals('name', $criterion->getColumn());
         $this->assertEquals('foo', $criterion->getValue());
         $this->assertEquals('=', $criterion->getComparison());
+
+        $this->assertEquals($mc->toString(), "Criteria:
+SQL (may not be complete): SELECT  FROM modifier_test WHERE modifier_test.name=:p1
+Params: modifier_test.name => 'foo'");
     }
 
     public function testValueNullWithEqualsOperator()
@@ -197,6 +267,10 @@ class FilterModifierTest extends TestCase
         $criterion = $mc->getMap()['modifier_test.name'];
         $this->assertNull($criterion->getValue());
         $this->assertEquals(Criteria::ISNULL, $criterion->getComparison());
+
+        $this->assertEquals($mc->toString(), "Criteria:
+SQL (may not be complete): SELECT  FROM modifier_test WHERE modifier_test.name IS NULL 
+Params: ");
     }
 
     public function testValueNullWithNotEqualsOperator()
@@ -216,6 +290,9 @@ class FilterModifierTest extends TestCase
         $criterion = $mc->getMap()['modifier_test.name'];
         $this->assertNull($criterion->getValue());
         $this->assertEquals(Criteria::ISNOTNULL, $criterion->getComparison());
+        $this->assertEquals($mc->toString(),"Criteria:
+SQL (may not be complete): SELECT  FROM modifier_test WHERE modifier_test.name IS NOT NULL 
+Params: ");
     }
 
     public function testValueNullWithoutOperator()
@@ -234,5 +311,9 @@ class FilterModifierTest extends TestCase
         $criterion = $mc->getMap()['modifier_test.name'];
         $this->assertNull($criterion->getValue());
         $this->assertEquals(Criteria::ISNULL, $criterion->getComparison());
+
+        $this->assertEquals($mc->toString(), "Criteria:
+SQL (may not be complete): SELECT  FROM modifier_test WHERE modifier_test.name IS NULL 
+Params: ");
     }
 }

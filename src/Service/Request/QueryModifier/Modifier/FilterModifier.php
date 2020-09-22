@@ -49,6 +49,10 @@ class FilterModifier extends ModifierBase
             Criteria::ILIKE,
             Criteria::NOT_ILIKE,
         ];
+    /**
+     * @var array
+     */
+    private $allowedOperators;
 
     /**
      * FilterModifier constructor.
@@ -59,17 +63,12 @@ class FilterModifier extends ModifierBase
      */
     public function __construct(ServerRequestInterface $request)
     {
-        self::$allowedFilterOperators = array_map('trim', self::$allowedFilterOperators);
+        foreach (self::$allowedFilterOperators as $operator){
+            $this->allowedOperators[trim($operator)] = $operator;
+        }
         parent::__construct($request);
     }
 
-    /**
-     * @return array
-     */
-    public static function allowedFilterOperators()
-    {
-        return self::$allowedFilterOperators;
-    }
 
     /**
      * Return the name of the modifier
@@ -85,6 +84,8 @@ class FilterModifier extends ModifierBase
      * Apply the filter to the ModelQuery
      *
      * @param \Propel\Runtime\ActiveQuery\ModelCriteria $query
+     *
+     * @return Modifier
      */
     public function apply(ModelCriteria $query)
     {
@@ -92,7 +93,7 @@ class FilterModifier extends ModifierBase
         if (!empty($this->modifiers)) {
             foreach ($this->modifiers as $modifier) {
                 if ($this->hasAllRequiredData($modifier)) {
-                    $operator = null;
+                    $operator = array_key_exists('operator', $modifier) ? $this->allowedOperators[trim($modifier['operator'])] : null;
                     if ($modifier['value'] === null) {
                         if (!array_key_exists('operator', $modifier) || $modifier['operator'] === Criteria::EQUAL) {
                             $operator = Criteria::ISNULL;
@@ -100,12 +101,12 @@ class FilterModifier extends ModifierBase
                             $operator = Criteria::ISNOTNULL;
                         }
                     }
-
                     $modifierClass->filterBy($modifier['property'], $modifier['value'], $operator);
 
                 }
             }
         }
+        return $modifierClass;
     }
 
     /**
@@ -126,13 +127,12 @@ class FilterModifier extends ModifierBase
     protected function hasAllRequiredData(array $modifier)
     {
         if (array_key_exists('operator', $modifier)
-            && !in_array($modifier['operator'],
-                self::$allowedFilterOperators)
+            && !array_key_exists($modifier['operator'],
+                                 $this->allowedOperators)
         ) {
             throw new ModifierException('The filter operator "' . $modifier['operator'] . '" is not allowed. You can only use one of the following:
                         ' . implode(', ', self::$allowedFilterOperators));
         }
-
         return array_key_exists('property', $modifier) && array_key_exists('value', $modifier);
     }
 }
