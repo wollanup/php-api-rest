@@ -42,17 +42,6 @@ abstract class ModifierBase
     }
 
     /**
-     * Apply modifiers
-     *
-     * @param \Propel\Runtime\ActiveQuery\ModelCriteria $query
-     * @param string                                    $clause
-     * @param array                                     $modifier
-     *
-     * @return void
-     */
-    abstract protected function applyModifier(ModelCriteria $query, $clause, array $modifier);
-
-    /**
      * Return the name of the modifier
      *
      * @return string
@@ -73,33 +62,7 @@ abstract class ModifierBase
      *
      * @param \Propel\Runtime\ActiveQuery\ModelCriteria $query
      */
-    public function apply(ModelCriteria $query)
-    {
-        if (!empty($this->modifiers)) {
-            foreach ($this->modifiers as $modifier) {
-                if ($this->hasAllRequiredData($modifier)) {
-                    $modifier['property'] = str_replace('/', '.', $modifier['property']);
-                    # Check if the filter is occurring on a related model
-                    if (strpos($modifier['property'], '.') !== false) {
-                        $propertyParts = explode('.', $modifier['property']);
-
-                        # The last part is the related property we want to filter with, so remove it from the parts and store into a variable
-                        $propertyField = array_pop($propertyParts);
-                        # The new last part is the relation name
-                        $relationName = array_pop($propertyParts);
-
-                        # Apply the modifier
-                        $this->applyModifier($query, $this->buildClause($propertyField, $relationName), $modifier);
-                    } else {
-                        # Apply the modifier
-                        $this->applyModifier($query,
-                            $this->buildClause($modifier['property'], $query->getModelShortName()),
-                            $modifier);
-                    }
-                }
-            }
-        }
-    }
+    abstract public function apply(ModelCriteria $query);
 
     /**
      * @param $property
@@ -181,21 +144,6 @@ abstract class ModifierBase
         $this->modifiers = $modifiers;
     }
 
-    /**
-     * @param      $property
-     * @param null $modelOrRelationName
-     *
-     * @return string
-     */
-    protected function buildClause($property, $modelOrRelationName)
-    {
-        $clause = ucfirst($property);
-        if ($modelOrRelationName) {
-            $clause = sprintf('%s.%s', ucfirst($modelOrRelationName), $clause);
-        }
-
-        return $clause;
-    }
 
     /**
      * @param $property
