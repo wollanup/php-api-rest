@@ -110,13 +110,6 @@ class FilterModifier extends ModifierBase
     }
 
     /**
-     * @inheritdoc
-     */
-    protected function applyModifier(ModelCriteria $query, $clause, array $modifier)
-    {
-    }
-
-    /**
      * Has the modifier all required data to be applied?
      *
      * @param array $modifier

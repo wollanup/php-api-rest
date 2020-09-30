@@ -12,6 +12,7 @@
 namespace Eukles\Service\Request\QueryModifier\Modifier;
 
 use Eukles\Service\QueryModifier\Easy\Builder\Sort;
+use Eukles\Service\QueryModifier\Easy\Modifier;
 use Eukles\Service\Request\QueryModifier\Modifier\Base\ModifierBase;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\Exception\UnknownColumnException;
@@ -65,17 +66,18 @@ class SortModifier extends ModifierBase
         return self::NAME;
     }
 
-    /**
-     * @inheritdoc
-     */
-    protected function applyModifier(ModelCriteria $query, $clause, array $modifier)
+    public function apply(ModelCriteria $query)
     {
-        # Apply filter on the last related model query
-        try {
-            $query->orderBy($clause,
-                (empty($modifier['direction']) ? self::DEFAULT_DIRECTION : $modifier['direction']));
-        } catch (UnknownColumnException $e) {
-        } catch (UnknownModelException $e) {
+        $modifierClass = new Modifier($query);
+        if (!empty($this->modifiers)) {
+            foreach ($this->modifiers as $modifier) {
+                if ($this->hasAllRequiredData($modifier)) {
+                    $modifierClass->orderBy(
+                        $modifier['property'],
+                        (empty($modifier['direction']) ? self::DEFAULT_DIRECTION : $modifier['direction'])
+                    );
+                }
+            }
         }
     }
 

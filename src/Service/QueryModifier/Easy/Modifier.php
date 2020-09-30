@@ -80,7 +80,12 @@ class Modifier
     public function orderBy(string $dotProperty, $order = Criteria::ASC): ModelCriteria
     {
         $property    = $this->before($dotProperty);
-        $this->query = $this->query->orderBy($property, $order);
+        $method      = $this->buildMethodName(__FUNCTION__, $property);
+        try{
+            $this->query = $this->query->{$method}($order);
+        } catch (\Throwable $e) {
+            $this->failures[] = $method;
+        }
         $this->after();
 
         return $this->query;

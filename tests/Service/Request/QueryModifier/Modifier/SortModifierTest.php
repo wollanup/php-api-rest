@@ -16,6 +16,7 @@ use ModifierTest;
 use ModifierTestQuery;
 use PHPUnit\Framework\TestCase;
 use Propel\Generator\Util\QuickBuilder;
+use Propel\Runtime\Map\Exception\RelationNotFoundException;
 use Test\Eukles\Request;
 
 /**
@@ -26,12 +27,17 @@ use Test\Eukles\Request;
 class SortModifierTest extends TestCase
 {
 
+    /**
+     * @var array to fill on the call of createSelectSql
+     */
+    private $arr;
+
     public function setUp()
     {
         if (!class_exists(ModifierTest::class)) {
-
             $b = new QuickBuilder;
-            $b->setSchema('
+            $b->setSchema(
+                '
 <database name="modifier_test_db">
 	<table name="modifier_test">
 		<column name="name" type="VARCHAR"/>
@@ -58,7 +64,7 @@ class SortModifierTest extends TestCase
         $m = new SortModifier(new Request(["sort" => json_encode(["property" => "name", "direction" => "asc"])]));
         $mc = new ModifierTestQuery();
         $m->apply($mc);
-        $this->assertEquals('modifier_test.name ASC', $mc->getOrderByColumns()[0]);
+        $this->assertEquals($mc->createSelectSql($this->arr), "SELECT  FROM  ORDER BY modifier_test.name ASC");
     }
 
     public function testApplyDesc()
@@ -66,7 +72,7 @@ class SortModifierTest extends TestCase
         $m = new SortModifier(new Request(["sort" => json_encode(["property" => "name", "direction" => "desc"])]));
         $mc = new ModifierTestQuery();
         $m->apply($mc);
-        $this->assertEquals('modifier_test.name DESC', $mc->getOrderByColumns()[0]);
+        $this->assertEquals($mc->createSelectSql($this->arr), "SELECT  FROM  ORDER BY modifier_test.name DESC");
     }
 
     public function testApplyMulti()
@@ -80,8 +86,10 @@ class SortModifierTest extends TestCase
         ]));
         $mc = new ModifierTestQuery();
         $m->apply($mc);
-        $this->assertEquals('modifier_test.name ASC', $mc->getOrderByColumns()[0]);
-        $this->assertEquals('modifier_test.column2 ASC', $mc->getOrderByColumns()[1]);
+        $this->assertEquals(
+            $mc->createSelectSql($this->arr),
+            "SELECT  FROM  ORDER BY modifier_test.name ASC,modifier_test.column2 ASC"
+        );
     }
 
     public function testSetModifierFromRequest()
@@ -116,7 +124,7 @@ class SortModifierTest extends TestCase
         $m = new SortModifier(new Request(["sort" => json_encode(["property" => "name"])]));
         $mc = new ModifierTestQuery();
         $m->apply($mc);
-        $this->assertEquals('modifier_test.name DESC', $mc->getOrderByColumns()[0]);
+        $this->assertEquals($mc->createSelectSql($this->arr), "SELECT  FROM  ORDER BY modifier_test.name DESC");
     }
 
     public function testGetName()
@@ -134,6 +142,7 @@ class SortModifierTest extends TestCase
             ]),
         ]));
         $mc = new ModifierTestQuery();
+        $this->expectException(RelationNotFoundException::class);
         $m->apply($mc);
         $this->assertEquals([], $mc->getOrderByColumns());
     }
@@ -149,20 +158,9 @@ class SortModifierTest extends TestCase
         $mc = new ModifierTestQuery();
         $mc->joinWithRelationTest();
         $m->apply($mc);
-        $this->assertEquals('relation_test.name ASC', $mc->getOrderByColumns()[0]);
-    }
-
-    public function testRelationWithSlash()
-    {
-        $m = new SortModifier(new Request([
-            "sort" => json_encode([
-                "property"  => "RelationTest/Name",
-                "direction" => "asc",
-            ]),
-        ]));
-        $mc = new ModifierTestQuery();
-        $mc->joinWithRelationTest();
-        $m->apply($mc);
-        $this->assertEquals('relation_test.name ASC', $mc->getOrderByColumns()[0]);
+        $this->assertEquals(
+            $mc->createSelectSql($this->arr),
+            "SELECT modifier_test.name, modifier_test.column2, modifier_test.date, modifier_test.relation_id, relation_test.name, relation_test.column2, relation_test.id FROM modifier_test INNER JOIN relation_test ON (modifier_test.relation_id=relation_test.id) INNER JOIN relation_test _RelationTest ON (modifier_test.relation_id=_RelationTest.id) ORDER BY _RelationTest.name ASC"
+        );
     }
 }
