@@ -10,6 +10,7 @@ namespace Eukles\Service\Request\QueryModifier\Modifier;
 
 use Eukles\Service\QueryModifier\Easy\Builder\Filter;
 use Eukles\Service\QueryModifier\Easy\Modifier;
+use Eukles\Service\QueryModifier\UseQuery\UseQueryFromDotNotationException;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -40,12 +41,29 @@ class EasyFilter
     /**
      * @param ModelCriteria $query
      *
-     * @throws \Eukles\Service\QueryModifier\UseQuery\UseQueryFromDotNotationException
+     * @throws UseQueryFromDotNotationException
      */
     public function apply(ModelCriteria $query)
     {
         $modifier = new Modifier($query);
-        foreach ($this->request->getQueryParams() as $column => $value) {
+        $rawQueryString = $this->request->getUri()->getQuery();
+        $decodedQueryString = urldecode($rawQueryString);
+        $rawQueryParams = explode('&', $decodedQueryString);
+        $queryParams = [];
+        foreach ($rawQueryParams as $rawQueryParam) {
+            if (empty($rawQueryParam)) {
+                # Ignore empty param '&'
+                continue;
+            }
+            list($key, $val) = explode('=', $rawQueryParam);
+            if (empty($key)) {
+                # Ignore empty key '=value'
+                continue;
+            }
+            $queryParams[$key] = (string)$val;
+        }
+
+        foreach ($queryParams as $column => $value) {
             # Ignored params
             if (is_string($value) === false || in_array($column, $this->ignoredParams)) {
                 continue;
