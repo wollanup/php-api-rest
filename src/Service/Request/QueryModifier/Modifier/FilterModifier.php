@@ -101,6 +101,9 @@ class FilterModifier extends ModifierBase
                             $operator = Criteria::ISNOTNULL;
                         }
                     }
+                    if (isset($modifier['logic']) && $modifier['logic'] === 'OR') {
+                        $query->_or();
+                    }
                     $modifierClass->filterBy($modifier['property'], $modifier['value'], $operator);
 
                 }
