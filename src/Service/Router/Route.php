@@ -19,11 +19,9 @@ use Eukles\Service\Router\Exception\RouteEmptyValueException;
 use Eukles\Service\Router\Middleware\SuccessHeaderLocationMiddleware;
 use Eukles\Service\Router\Middleware\SuccessStatusMiddleware;
 use Eukles\Slim\DeferredCallable;
-use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
-use Zend\Permissions\Acl\Role\GenericRole;
 use Zend\Permissions\Acl\Role\RoleInterface;
 
 /**
@@ -87,10 +85,7 @@ class Route extends \Slim\Route implements RouteInterface
      * @var string
      */
     private $resource;
-    /**
-     * @var array
-     */
-    private $roles;
+
     /**
      * Array of status sent by this route
      *
@@ -115,8 +110,7 @@ class Route extends \Slim\Route implements RouteInterface
         if (!$this->container instanceof \Psr\Container\ContainerInterface) {
             throw new RuntimeException("Container is required to invoke Route");
         }
-        $class = $this->getActionClass();
-        $this->callable = [new $class($this->container), $this->getActionMethod()];
+        $this->callable = $this->getActionClass() . ':' . $this->getActionMethod();
 
         return parent::__invoke($request, $response);
     }
@@ -337,11 +331,11 @@ class Route extends \Slim\Route implements RouteInterface
     }
 
     /**
-     * @return array
+     * @return string[]
      */
     public function getRoles(): array
     {
-        return $this->roles;
+        return $this->getArgument('roles', []);
     }
 
     /**
@@ -351,9 +345,7 @@ class Route extends \Slim\Route implements RouteInterface
      */
     public function setRoles(array $roles): RouteInterface
     {
-        foreach ($roles as $role) {
-            $this->addRole($role);
-        }
+        $this->setArgument('roles', $roles);
 
         return $this;
     }
@@ -365,13 +357,9 @@ class Route extends \Slim\Route implements RouteInterface
      */
     public function addRole($role): RouteInterface
     {
-        if (is_string($role)) {
-            $this->roles[] = new GenericRole($role);
-        } elseif (!$role instanceof RoleInterface) {
-            throw new InvalidArgumentException(
-                'addRole() expects $role to be of type Zend\Permissions\Acl\Role\RoleInterface'
-            );
-        }
+        $roles = $this->getArgument('roles', []);
+        $roles[] = $role;
+        $this->setArgument('roles', $roles);
 
         return $this;
     }
@@ -397,7 +385,7 @@ class Route extends \Slim\Route implements RouteInterface
      */
     public function hasRoles(): bool
     {
-        return false === empty($this->roles);
+        return false === empty($this->getRoles());
     }
 
     /**
