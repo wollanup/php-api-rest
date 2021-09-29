@@ -28,26 +28,29 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
 {
 
     use ContainerTrait;
+
+    protected int $apiVersion = 1;
+
     /**
      * @var string|ActionInterface
      */
     protected $actionClass;
     /**
-     * @var string
+     * @var string|null
      */
-    protected $packageName;
+    protected ?string $packageName = null;
     /**
      * @var string|EntityRequestInterface
      */
-    protected $requestClass;
+    protected string $requestClass;
     /**
      * @var string
      */
-    protected $resourceName;
+    protected string $resourceName;
     /**
      * @var string
      */
-    protected $routesPrefix;
+    protected string $routesPrefix = "";
 
     /**
      * RouteMapAbstract constructor.
@@ -58,6 +61,24 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
     {
         $this->container = $container;
         $this->initialize();
+    }
+
+    /**
+     * @return int
+     */
+    public function getApiVersion(): int
+    {
+        return $this->apiVersion;
+    }
+
+    /**
+     * @param int $apiVersion
+     * @return RouteMapAbstract
+     */
+    public function setApiVersion(int $apiVersion): RouteMapAbstract
+    {
+        $this->apiVersion = $apiVersion;
+        return $this;
     }
 
     /**
@@ -100,6 +121,11 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
             # Add prefix before resource
             array_unshift($prefixes, $this->routesPrefix);
         }
+        if ($this->getApiVersion() > 1) {
+            # Add version before resource
+            array_unshift($prefixes, 'v' . $this->getApiVersion());
+        }
+
         $pattern = $this->trailingSlash($pattern);
         $pattern = implode('/', $prefixes) . $pattern;
         $pattern = '/' . ltrim($pattern, '/');
@@ -238,7 +264,7 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
     {
         $routeName = rtrim($routeName, ']');
         $routeName = rtrim($routeName, '[/');
-        $missing   = substr_count($routeName, '[') - substr_count($routeName, ']');
+        $missing = substr_count($routeName, '[') - substr_count($routeName, ']');
         $routeName .= '[/]' . str_repeat(']', $missing);
 
         return $routeName;
