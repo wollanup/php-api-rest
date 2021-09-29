@@ -51,6 +51,8 @@ interface RouteMapInterface extends \Iterator
      */
     public function getActionClass(): string;
 
+    public function getApiVersion(): int;
+
     /**
      * @return ContainerInterface
      */
@@ -114,6 +116,8 @@ interface RouteMapInterface extends \Iterator
      * @param RouterInterface $router
      */
     public function registerRoutes(RouterInterface $router);
+
+    public function setApiVersion(int $apiVersion): self;
 
     /**
      * @param ContainerInterface $c

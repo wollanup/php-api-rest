@@ -21,7 +21,7 @@
     }
   },
   "require": {
-      "php": ">=7.0",
+      "php": ">=7.4",
       "ext-json": "*",
       "crell/api-problem": "^2.0",
       "akrabat/rka-content-type-renderer": "^0.7.3",
