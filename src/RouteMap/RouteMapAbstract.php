@@ -30,27 +30,26 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
     use ContainerTrait;
 
     protected int $apiVersion = 1;
-
     /**
      * @var string|ActionInterface
      */
-    protected $actionClass;
+    protected $actionClass = null;
     /**
      * @var string|null
      */
-    protected ?string $packageName = null;
+    protected $packageName = null;
     /**
      * @var string|EntityRequestInterface
      */
-    protected string $requestClass;
+    protected $requestClass = null;
     /**
      * @var string
      */
-    protected string $resourceName;
+    protected $resourceName = null;
     /**
      * @var string
      */
-    protected string $routesPrefix = "";
+    protected $routesPrefix = null;
 
     /**
      * RouteMapAbstract constructor.
