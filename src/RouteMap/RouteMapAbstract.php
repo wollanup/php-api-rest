@@ -33,23 +33,23 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
     /**
      * @var string|ActionInterface
      */
-    protected $actionClass = null;
+    protected $actionClass = '';
     /**
-     * @var string|null
+     * @var string
      */
-    protected $packageName = null;
+    protected $packageName = '';
     /**
      * @var string|EntityRequestInterface
      */
-    protected $requestClass = null;
+    protected $requestClass = '';
     /**
      * @var string
      */
-    protected $resourceName = null;
+    protected $resourceName = '';
     /**
      * @var string
      */
-    protected $routesPrefix = null;
+    protected $routesPrefix = '';
 
     /**
      * RouteMapAbstract constructor.
@@ -104,10 +104,10 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
     {
         $route = new Route($this, $method);
         $route->setContainer($this->container);
-        if (null !== $this->actionClass) {
+        if ('' !== $this->actionClass) {
             $route->setActionClass($this->actionClass);
         }
-        if (null !== $this->requestClass) {
+        if ('' !== $this->requestClass) {
             $route->setRequestClass($this->requestClass);
         }
         $route->setPackage($this->getPackage());
@@ -196,7 +196,7 @@ abstract class RouteMapAbstract extends DataIterator implements RouteMapInterfac
      */
     public function hasPackage(): bool
     {
-        return null !== $this->packageName;
+        return '' !== $this->packageName;
     }
 
     /**
