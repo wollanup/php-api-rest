@@ -18,6 +18,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use ReflectionClass;
 use ReflectionException;
+use ReflectionNamedType;
 use ReflectionParameter;
 use Slim\Interfaces\InvocationStrategyInterface;
 
@@ -166,6 +167,13 @@ class ActionStrategy implements InvocationStrategyInterface
                         "Missing or null required parameter '{$name}' in " . $r->getName() . "::" . $m->getName()
                     );
                 }
+                $paramType = $param->getType();
+                if ($paramType instanceof ReflectionNamedType) {
+                    $paramTypeName = $paramType->getName();
+                    if ($paramTypeName === 'bool') {
+                        $paramValue = $this->toBool($paramValue);
+                    }
+                }
                 $buildParams[] = $paramValue;
             }
         }
@@ -245,5 +253,24 @@ class ActionStrategy implements InvocationStrategyInterface
         }
 
         return $response;
+    }
+
+    protected function toBool($value): bool
+    {
+        if (is_string($value)) {
+            $value = strtolower($value);
+        }
+        return in_array($value, [
+            true,
+            1,
+            'true',
+            '1',
+            'on',
+            'checked',
+            'selected',
+            'active',
+            'yes',
+            'oui',
+        ], true);
     }
 }
