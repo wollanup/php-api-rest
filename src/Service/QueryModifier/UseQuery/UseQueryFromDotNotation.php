@@ -135,7 +135,7 @@ class UseQueryFromDotNotation
                     throw new RelationNotFoundException("Relation \"$relation\" Not Found in \"$path\"");
                 }
                 $alias = $alias ?? 'alias_' . self::$aliasesCnt++;
-                $this->query = call_user_func([$this->query, $method], $alias . "_" . $relation, $joinType);
+                $this->query = call_user_func([$this->query, $method], "`" . $alias . "_" . $relation . "`", $joinType);
             }
         }
         $this->inUse = true;
